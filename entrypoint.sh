@@ -41,7 +41,7 @@ buildMaliciousHostnames(){
   wget -qO- "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)" | \
   sed '/\(^[ \|\t]*#\)\|\(^[ ]\+\)\|\(^$\)\|\(^[\n\|\r\|\r\n][ \|\t]*$\)\|\(^127.0.0.1\)/d' | \
   sed 's/\([ \|\t]*#.*$\)\|\(\r\)\|\(0.0.0.0 \)//g')$'\n'$( \
-  wget -qO- https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS | \
+  wget -qO- https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS/HOSTS | \
   sed '/\(^[ \|\t]*#\)\|\(^[ ]\+\)\|\(^$\)\|\(^[\n\|\r\|\r\n][ \|\t]*$\)\|\(^127.0.0.1\)/d' | \
   sed 's/\([ \|\t]*#.*$\)\|\(\r\)\|\(0.0.0.0 \)//g')
   [ $VERBOSE = 0 ] || COUNT_BEFORE=$(echo "$hostnames" | sed '/^\s*$/d' | wc -l)
