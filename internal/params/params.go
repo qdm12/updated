@@ -40,11 +40,11 @@ func GetRootAnchorsSHA256() (rootAnchorsSHA256 string, err error) {
 // GetPeriodMinutes obtains the period in minutes from the PERIOD environment
 // variable. It defaults to 600 minutes.
 func GetPeriodMinutes() (periodMinutes time.Duration, err error) {
-	duration, err := libparams.GetDuration("PERIOD", 600*time.Millisecond)
+	duration, err := libparams.GetDuration("PERIOD", 600, time.Minute)
 	if err != nil {
 		return periodMinutes, err
 	}
-	return duration * 60000, nil
+	return duration, nil
 }
 
 // GetResolveHostnames obtains 'yes' or 'no' to resolve hostnames in order to obtain
