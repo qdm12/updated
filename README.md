@@ -14,10 +14,11 @@
 
 ## TODOs
 
-- [ ] Go-Git with API Github key
+- [ ] Write /known_hosts file with Github RSA host key by default
 - [ ] Dockerfile
 - [ ] Readme and docker-compose.yml
 - [ ] Unit tests
+- [ ] Version in json file with updated files
 - [ ] Use lists from Blockada
 
 ## License

@@ -26,14 +26,15 @@ func (e *Env) Warn(message interface{}) {
 }
 
 // CheckError logs an error and sends a notification to the Gotify server
-// if the error is not nil.
-func (e *Env) CheckError(err error) {
+// if the error is not nil. It returns the error it received.
+func (e *Env) CheckError(err error) error {
 	if err == nil {
-		return
+		return nil
 	}
 	s := err.Error()
 	logging.Errorf(s)
 	e.Gotify.Notify("Error", 3, s)
+	return err
 }
 
 // FatalOnError calls Fatal if the error is not nil.
