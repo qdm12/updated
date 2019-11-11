@@ -99,14 +99,19 @@ func GetSSHKeyFilepath() (filePath string, err error) {
 }
 
 // GetSSHKeyPassphrase obtains the SSH key passphrase file path,
-// from the environment variable SSH_KEY_PASSPHRASE and defaults to /passphrase.
+// from the environment variable SSH_KEY_PASSPHRASE and defaults to returning an
+// empty string passphrase if no file is provided.
 // It uses files instead of environment variables for security reasons.
-// It returns the content of the file as a string.
 func GetSSHKeyPassphrase() (passphrase string, err error) {
-	filePath, err := libparams.GetPath("SSH_KEY_PASSPHRASE", "/passphrase")
+	filePath, err := libparams.GetPath("SSH_KEY_PASSPHRASE", "")
 	if err != nil {
 		return "", err
-	} else if _, err := os.Stat(filePath); err != nil {
+	}
+	if filePath == "" {
+		// no passphrase
+		return "", nil
+	}
+	if _, err := os.Stat(filePath); err != nil {
 		return "", err
 	}
 	file, err := os.Open(filePath)
