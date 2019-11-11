@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/qdm12/golibs/verification"
@@ -129,9 +130,9 @@ func GetSSHKeyPassphrase() (passphrase string, err error) {
 // GetGitURL obtains the Git repository URL to interact with,
 // from the environment variable GIT_URL.
 func GetGitURL() (URL string, err error) {
-	url, err := libparams.GetURL("GIT_URL", "")
-	if err != nil {
-		return "", err
+	URL = libparams.GetEnv("GIT_URL", "")
+	if !regexp.MustCompile(`((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?`).MatchString(URL) {
+		return "", fmt.Errorf("environment variable GIT_URL value %q is not valid", URL)
 	}
-	return url.String(), nil
+	return URL, nil
 }
