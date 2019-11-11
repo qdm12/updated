@@ -26,7 +26,6 @@ import (
 )
 
 func main() {
-	logging.InitLogger()
 	if healthcheck.Mode(os.Args) {
 		if err := healthcheck.Query(); err != nil {
 			logging.Err(err)
@@ -40,6 +39,12 @@ func main() {
 	fmt.Println("########## Give some " + emoji.Sprint(":heart:") + "at ##########")
 	fmt.Println("# github.com/qdm12/updated #")
 	fmt.Print("#####################################\n\n")
+	encoding, level, nodeID, err := libparams.GetLoggerConfig()
+	if err != nil {
+		logging.Error(err.Error())
+	} else {
+		logging.InitLogger(encoding, level, nodeID)
+	}
 	var e env.Env
 	HTTPTimeout, err := libparams.GetHTTPTimeout(3000)
 	e.HTTPClient = &http.Client{Timeout: HTTPTimeout}
