@@ -51,6 +51,7 @@ func main() {
 	e.Gotify = admin.InitGotify(e.HTTPClient)
 	outputDir, err := params.GetOutputDir()
 	e.FatalOnError(err)
+	logging.Infof("output directory is %q", outputDir)
 	namedRootMD5, err := params.GetNamedRootMD5()
 	e.FatalOnError(err)
 	rootAnchorsSHA256, err := params.GetRootAnchorsSHA256()
