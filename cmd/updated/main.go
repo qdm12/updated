@@ -112,30 +112,15 @@ func run(httpClient *http.Client, checkOnError func(err error) error, outputDir 
 		if checkOnError(err) != nil {
 			return
 		}
-		err = gitClient.CheckoutBranch("updated")
-		if err != nil {
-			err := gitClient.Branch("updated")
-			if checkOnError(err) != nil {
-				return
-			}
-		}
-		err = gitClient.CheckoutBranch("updated")
-		if checkOnError(err) != nil {
-			return
-		}
 		err = gitClient.Pull()
 		if checkOnError(err) != nil {
 			return
 		}
-		// Commit changes and upload on branch updated
+		// Upload changes when done
 		defer func() {
-			err := gitClient.Pull()
-			if checkOnError(err) != nil {
-				return
-			}
-			// TODO
-			// err := gitClient.Commit()
-			// err := gitClient.Push()
+			message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
+			err := gitClient.UploadAllChanges(message)
+			checkOnError(err)
 		}()
 	}
 
