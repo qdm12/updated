@@ -141,27 +141,27 @@ func run(httpClient *http.Client, checkOnError func(err error) error, outputDir 
 
 	// Build named root from internic.net
 	namedRoot, err := dnscrypto.GetNamedRoot(httpClient, namedRootMD5)
-	if checkOnError(err) != nil {
+	if checkOnError(err) == nil {
 		err = files.WriteToFile(filepath.Join(outputDir, "named.root.updated"), namedRoot)
 		checkOnError(err)
 	}
 
 	// Build root anchors XML from data.iana.org
 	rootAnchorsXML, err := dnscrypto.GetRootAnchorsXML(httpClient, rootAnchorsSHA256)
-	if checkOnError(err) != nil {
+	if checkOnError(err) == nil {
 		err = files.WriteToFile(filepath.Join(outputDir, "root-anchors.xml.updated"), rootAnchorsXML)
 		checkOnError(err)
 	}
 	rootKeys, err := dnscrypto.ConvertRootAnchorsToRootKeys(rootAnchorsXML)
-	if checkOnError(err) != nil {
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "root-anchors.xml.updated"), rootKeys)
+	if checkOnError(err) == nil {
+		err = files.WriteLinesToFile(filepath.Join(outputDir, "root.key.updated"), rootKeys)
 		checkOnError(err)
 	}
 
 	// Build hostnames
 	var hostnamesFailed bool
 	hostnames, err := hostnames.BuildMalicious(httpClient)
-	if checkOnError(err) != nil {
+	if checkOnError(err) == nil {
 		hostnamesFailed = true
 		err = files.WriteLinesToFile(filepath.Join(outputDir, "malicious-hostnames.updated"), hostnames)
 		checkOnError(err)
@@ -174,7 +174,7 @@ func run(httpClient *http.Client, checkOnError func(err error) error, outputDir 
 
 	// Build IPs
 	newIPs, err := ips.BuildMalicious(httpClient)
-	if checkOnError(err) != nil {
+	if checkOnError(err) == nil {
 		IPs = append(IPs, newIPs...)
 		var removedCount int
 		IPs, removedCount = ips.CleanIPs(IPs)
