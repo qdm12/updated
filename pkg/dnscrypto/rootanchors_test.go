@@ -11,12 +11,12 @@ func Test_parseRootAnchors(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		input []byte
-		out   RootAnchors
+		out   TrustAnchor
 		err   error
 	}{
 		"root anchors 2019-10-04": {
 			[]byte(""),
-			RootAnchors{},
+			TrustAnchor{},
 			errors.New("EOF"),
 		},
 	}

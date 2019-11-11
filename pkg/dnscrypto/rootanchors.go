@@ -11,22 +11,21 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-// RootAnchors holds the XML data of the root anchors
-type RootAnchors struct {
-	TrustAnchor struct {
-		ID        string `xml:"id,attr"`
-		Source    string `xml:"source,attr"`
-		Zone      string `xml:"Zone"`
-		KeyDigest []struct {
-			ID         string    `xml:"id,attr"`
-			ValidFrom  time.Time `xml:"validFrom,attr"`
-			ValidUntil time.Time `xml:"validUntil,attr"`
-			KeyTag     int       `xml:"KeyTag"`
-			Algorithm  int       `xml:"Algorithm"`
-			DigestType int       `xml:"DigestType"`
-			Digest     string    `xml:"Digest"`
-		} `xml:"KeyDigest"`
-	} `xml:"TrustAnchor"`
+// TrustAnchor holds the XML data of the root anchors
+type TrustAnchor struct {
+	XMLName   xml.Name `xml:"TrustAnchor"`
+	ID        string   `xml:"id,attr"`
+	Source    string   `xml:"source,attr"`
+	Zone      string   `xml:"Zone"`
+	KeyDigest []struct {
+		ID         string    `xml:"id,attr"`
+		ValidFrom  time.Time `xml:"validFrom,attr"`
+		ValidUntil time.Time `xml:"validUntil,attr"`
+		KeyTag     int       `xml:"KeyTag"`
+		Algorithm  int       `xml:"Algorithm"`
+		DigestType int       `xml:"DigestType"`
+		Digest     string    `xml:"Digest"`
+	} `xml:"KeyDigest"`
 }
 
 // GetRootAnchorsXML fetches the root anchors XML file online and parses it
@@ -48,11 +47,11 @@ func GetRootAnchorsXML(httpClient *http.Client, rootAnchorsHexSHA256 string) (ro
 
 // ConvertRootAnchorsToRootKeys converts root anchors XML data to a list of DNS root keys
 func ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error) {
-	rootAnchors, err := parseRootAnchors(rootAnchorsXML)
+	trustAnchor, err := parseRootAnchors(rootAnchorsXML)
 	if err != nil {
 		return nil, err
 	}
-	for _, keyDigest := range rootAnchors.TrustAnchor.KeyDigest {
+	for _, keyDigest := range trustAnchor.KeyDigest {
 		rootKey := fmt.Sprintf(". IN DS %d %d %d %s",
 			keyDigest.KeyTag, keyDigest.Algorithm, keyDigest.DigestType, keyDigest.Digest)
 		rootKeys = append(rootKeys, rootKey)
@@ -60,10 +59,7 @@ func ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err
 	return rootKeys, nil
 }
 
-func parseRootAnchors(content []byte) (rootAnchorsXML RootAnchors, err error) {
-	err = xml.Unmarshal(content, &rootAnchorsXML)
-	if err != nil {
-		return rootAnchorsXML, err
-	}
-	return rootAnchorsXML, nil
+func parseRootAnchors(rootAnchorsXML []byte) (trustAnchor TrustAnchor, err error) {
+	err = xml.Unmarshal(rootAnchorsXML, &trustAnchor)
+	return trustAnchor, err
 }
