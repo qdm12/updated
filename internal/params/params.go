@@ -77,7 +77,7 @@ func GetGit() (doGit bool, err error) {
 // GetSSHKnownHostsFilepath obtains the file path of the SSH known_hosts file,
 // from the environment variable SSH_KNOWN_HOSTS and defaults to /known_hosts.
 func GetSSHKnownHostsFilepath() (filePath string, err error) {
-	filePath, err = libparams.GetPath("SSH_KNOWN_HOSTS", "/known_hosts")
+	filePath, err = libparams.GetPath("SSH_KNOWN_HOSTS", "./known_hosts")
 	if err != nil {
 		return "", err
 	} else if _, err := os.Stat(filePath); err != nil {
@@ -89,7 +89,7 @@ func GetSSHKnownHostsFilepath() (filePath string, err error) {
 // GetSSHKeyFilepath obtains the file path of the SSH private key,
 // from the environment variable SSH_KEY and defaults to /key
 func GetSSHKeyFilepath() (filePath string, err error) {
-	filePath, err = libparams.GetPath("SSH_KEY", "/key")
+	filePath, err = libparams.GetPath("SSH_KEY", "./key")
 	if err != nil {
 		return "", err
 	} else if _, err := os.Stat(filePath); err != nil {
