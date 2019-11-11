@@ -33,7 +33,7 @@ func buildForSources(httpClient *http.Client, title string, sources []sourceType
 		}
 		IPs = append(IPs, newIPs...)
 	}
-	logging.Infof("built %s IPs: %d IPs fetched", title, len(IPs))
+	logging.Infof("built %s IPs: %d IP address lines fetched", title, len(IPs))
 	return IPs, nil
 }
 
@@ -46,7 +46,6 @@ func buildForSource(
 ) (IPs []string, err error) {
 	tStart := time.Now()
 	logging.Debugf("building IPs %s...", URL)
-	defer logging.Infof("built IPs %s during %s", URL, time.Since(tStart))
 	content, err := network.GetContent(httpClient, URL, network.GetContentParamsType{DisguisedUserAgent: true})
 	if err != nil {
 		return nil, err
@@ -70,5 +69,6 @@ func buildForSource(
 			logging.Warnf("%q is not an IP address nor an IP subnet", line)
 		}
 	}
+	logging.Infof("built IPs %s during %s", URL, time.Since(tStart))
 	return IPs, nil
 }
