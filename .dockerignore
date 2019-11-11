@@ -1,7 +1,10 @@
 .devcontainer
 .vscode
+.dockerignore
 .gitignore
 .git
+Dockerfile
+docker-compose.yml
 files
 LICENSE
 README.md
