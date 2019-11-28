@@ -74,7 +74,7 @@ func main() {
 		e.FatalOnError(err)
 	}
 	go signals.WaitForExit(e.ShutdownFromSignal)
-	errs := network.ConnectivityChecks(e.HTTPClient, []string{"google.com"})
+	errs := network.ConnectivityChecks(e.HTTPClient, []string{"github.com"})
 	for _, err := range errs {
 		e.Warn(err)
 	}
@@ -137,27 +137,33 @@ func run(httpClient *http.Client, checkOnError func(err error) error, outputDir 
 		err = files.WriteToFile(filepath.Join(outputDir, "root-anchors.xml.updated"), rootAnchorsXML)
 		checkOnError(err)
 	}
+
+	// Build root keys for Unbound
 	rootKeys, err := dnscrypto.ConvertRootAnchorsToRootKeys(rootAnchorsXML)
 	if checkOnError(err) == nil {
 		err = files.WriteLinesToFile(filepath.Join(outputDir, "root.key.updated"), rootKeys)
 		checkOnError(err)
 	}
 
-	// Build hostnames
-	var hostnamesFailed bool
+	buildMalicious(httpClient, outputDir, resolveHostnames, checkOnError)
+
+	buildAds(httpClient, outputDir, resolveHostnames, checkOnError)
+
+	buildSurveillance(httpClient, outputDir, resolveHostnames, checkOnError)
+}
+
+func buildMalicious(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
+	hostnamesFailed := false
 	hostnames, err := hostnames.BuildMalicious(httpClient)
 	if checkOnError(err) == nil {
 		hostnamesFailed = true
 		err = files.WriteLinesToFile(filepath.Join(outputDir, "malicious-hostnames.updated"), hostnames)
 		checkOnError(err)
 	}
-
 	IPs := []string{}
 	if !hostnamesFailed && resolveHostnames {
 		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
 	}
-
-	// Build IPs
 	newIPs, err := ips.BuildMalicious(httpClient)
 	if checkOnError(err) == nil {
 		IPs = append(IPs, newIPs...)
@@ -167,4 +173,42 @@ func run(httpClient *http.Client, checkOnError func(err error) error, outputDir 
 		err = files.WriteLinesToFile(filepath.Join(outputDir, "malicious-ips.updated"), IPs)
 		checkOnError(err)
 	}
+}
+
+func buildAds(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
+	hostnamesFailed := false
+	hostnames, err := hostnames.BuildAds(httpClient)
+	if checkOnError(err) == nil {
+		hostnamesFailed = true
+		err = files.WriteLinesToFile(filepath.Join(outputDir, "ads-hostnames.updated"), hostnames)
+		checkOnError(err)
+	}
+	IPs := []string{}
+	if !hostnamesFailed && resolveHostnames {
+		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
+	}
+	var removedCount int
+	IPs, removedCount = ips.CleanIPs(IPs)
+	logging.Infof("Trimmed down %d IP address lines", removedCount)
+	err = files.WriteLinesToFile(filepath.Join(outputDir, "ads-ips.updated"), IPs)
+	checkOnError(err)
+}
+
+func buildSurveillance(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
+	hostnamesFailed := false
+	hostnames, err := hostnames.BuildSurveillance(httpClient)
+	if checkOnError(err) == nil {
+		hostnamesFailed = true
+		err = files.WriteLinesToFile(filepath.Join(outputDir, "surveillance-hostnames.updated"), hostnames)
+		checkOnError(err)
+	}
+	IPs := []string{}
+	if !hostnamesFailed && resolveHostnames {
+		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
+	}
+	var removedCount int
+	IPs, removedCount = ips.CleanIPs(IPs)
+	logging.Infof("Trimmed down %d IP address lines", removedCount)
+	err = files.WriteLinesToFile(filepath.Join(outputDir, "surveillance-ips.updated"), IPs)
+	checkOnError(err)
 }
