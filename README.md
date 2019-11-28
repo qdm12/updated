@@ -30,34 +30,11 @@ and optionally upload the changes to a Git repository using an SSH key.
 
 1. <details><summary>CLICK IF YOU HAVE AN ARM DEVICE</summary><p>
 
-    - If you have a ARM 32 bit v6 architecture
+    You need to build the Docker image on your device:
 
-        ```sh
-        docker build -t qmcgaw/updated \
-        --build-arg BASE_IMAGE_BUILDER=arm32v6/golang \
-        --build-arg GOARCH=arm \
-        --build-arg GOARM=6 \
-        https://github.com/qdm12/updated.git
-        ```
-
-    - If you have a ARM 32 bit v7 architecture
-
-        ```sh
-        docker build -t qmcgaw/updated \
-        --build-arg BASE_IMAGE_BUILDER=arm32v7/golang \
-        --build-arg GOARCH=arm \
-        --build-arg GOARM=7 \
-        https://github.com/qdm12/updated.git
-        ```
-
-    - If you have a ARM 64 bit v8 architecture
-
-        ```sh
-        docker build -t qmcgaw/updated \
-        --build-arg BASE_IMAGE_BUILDER=arm64v8/golang \
-        --build-arg GOARCH=arm64 \
-        https://github.com/qdm12/updated.git
-        ```
+    ```sh
+    docker build -t qmcgaw/updated https://github.com/qdm12/updated.git
+    ```
 
     </p></details>
 
@@ -82,9 +59,9 @@ and optionally upload the changes to a Git repository using an SSH key.
     ```
 
     To use with Git, you will also need to bind mount some files:
-        - SSH key file at `/key` by default
-        - SSH key passphrase optionally at `/passphrase`, if your SSH key is encrypted
-        - SSH known hosts at `/known_hosts` by default, the default contains only Github key
+    - SSH key file at `/key` by default
+    - SSH key passphrase optionally at `/passphrase`, if your SSH key is encrypted
+    - SSH known hosts at `/known_hosts` by default, the default contains only Github key
     And set their ownership to user ID `1000` also.
 
 1. Check logs with `docker logs updated` and update the image with `docker pull qmcgaw/updated`
@@ -149,7 +126,7 @@ This container is used to periodically update files at [github.com/qdm12/files](
 ## TODOs
 
 - [ ] Compress long repetitive files
-- [ ] Unit tests
+- [ ] Unit tests (no time sorry)
 - [ ] Version in json file with updated files
 - [ ] Use lists from Blockada
 

@@ -1,14 +1,10 @@
-ARG BASE_IMAGE_BUILDER=golang
 ARG ALPINE_VERSION=3.10
 ARG GO_VERSION=1.13
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
 
-
-FROM ${BASE_IMAGE_BUILDER}:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
-ARG GOARCH=amd64
-ARG GOARM
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 RUN apk --update add git g++
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
@@ -16,7 +12,7 @@ RUN go mod download 2>&1
 COPY cmd/updated/main.go cmd/app/main.go
 COPY internal ./internal
 COPY pkg ./pkg
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} GOARM=${GOARM} go build -ldflags="-s -w" -o app cmd/app/main.go
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o app cmd/app/main.go
 
 FROM alpine:3.10
 ARG BUILD_DATE
