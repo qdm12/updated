@@ -19,7 +19,7 @@ func BuildSurveillance(httpClient *http.Client) (hostnames []string, err error) 
 				return strings.TrimPrefix(line, "0.0.0.0 ")
 			},
 			customIsLineValid: func(line string) bool {
-				return strings.HasPrefix(line, "127.0.0.1 ")
+				return !strings.HasPrefix(line, "127.0.0.1 ")
 			},
 		},
 	}
