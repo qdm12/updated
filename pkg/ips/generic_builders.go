@@ -11,6 +11,25 @@ import (
 	"github.com/qdm12/golibs/logging"
 )
 
+var privateCIDRs []*net.IPNet
+
+func init() {
+	privateCIDRBlocks := [8]string{
+		"127.0.0.1/8",    // localhost
+		"10.0.0.0/8",     // 24-bit block
+		"172.16.0.0/12",  // 20-bit block
+		"192.168.0.0/16", // 16-bit block
+		"169.254.0.0/16", // link local address
+		"::1/128",        // localhost IPv6
+		"fc00::/7",       // unique local address IPv6
+		"fe80::/10",      // link local address IPv6
+	}
+	for _, privateCIDRBlock := range privateCIDRBlocks {
+		_, CIDR, _ := net.ParseCIDR(privateCIDRBlock)
+		privateCIDRs = append(privateCIDRs, CIDR)
+	}
+}
+
 type sourceType struct {
 	url                 string
 	customPreCleanLine  func(line string) string
@@ -57,13 +76,17 @@ func buildForSource(
 			line = postCleanLine(line, customPostCleanLine)
 			// check for single IP
 			if IP := net.ParseIP(line); IP != nil {
-				IPs = append(IPs, IP.String())
+				if !netIPIsPrivate(IP) {
+					IPs = append(IPs, IP.String())
+				}
 				continue
 			}
 			// check for CIDR
-			_, CIDRPtr, err := net.ParseCIDR(line)
+			IP, CIDRPtr, err := net.ParseCIDR(line)
 			if err == nil {
-				IPs = append(IPs, CIDRPtr.String())
+				if !netIPIsPrivate(IP) {
+					IPs = append(IPs, CIDRPtr.String())
+				}
 				continue
 			}
 			logging.Warnf("%q is not an IP address nor an IP subnet", line)
@@ -71,4 +94,13 @@ func buildForSource(
 	}
 	logging.Infof("built IPs %s during %s", URL, time.Since(tStart))
 	return IPs, nil
+}
+
+func netIPIsPrivate(netIP net.IP) bool {
+	for i := range privateCIDRs {
+		if privateCIDRs[i].Contains(netIP) {
+			return true
+		}
+	}
+	return false
 }
