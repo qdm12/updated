@@ -22,7 +22,7 @@ func GetOutputDir() (path string, err error) {
 // from the environment variable NAMED_ROOT_MD5. It defaults to
 // 25659425b11bb58ece6306d0cfe4b587
 func GetNamedRootMD5() (namedRootMD5 string, err error) {
-	s := libparams.GetEnv("NAMED_ROOT_MD5", "23ec4e704cdaa1dcaaa6f66bc2c0563f")
+	s := libparams.GetEnv("NAMED_ROOT_MD5", "1e4e7c3e1ce2c5442eed998046edf548")
 	if !verification.MatchMD5String(s) {
 		return "", fmt.Errorf("%s is not a 32 hexadecimal MD5 string", s)
 	}
