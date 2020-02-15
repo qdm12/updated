@@ -65,7 +65,7 @@ func main() {
 		e.Warn(err)
 	}
 	runner := run.NewRunner(allSettings, client, logger)
-	e.Notify("Program started", 1, "")
+	e.Notify(1, "Program started")
 	for {
 		go func() {
 			err := runner.Run()
