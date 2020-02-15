@@ -49,7 +49,7 @@ Compatible with amd64, x86 and ARM v6/v7/v8
 1. Use the following command:
 
     ```sh
-    docker run -d -v /tmp/files:/files qmcgaw/updated
+    docker run -d -v $(pwd)/files:/files qmcgaw/updated
     ```
 
     You can also use [docker-compose.yml](https://github.com/qdm12/updated/blob/master/docker-compose.yml) with:
