@@ -9,8 +9,7 @@ services:
       - OUTPUT_DIR=./files
       - PERIOD=600
       - RESOLVE_HOSTNAMES=no
-      - HTTP_TIMEOUT=3000
-      - LOG_ENCODING=json
+      - LOG_ENCODING=console
       - LOG_LEVEL=info
       - NAMED_ROOT_MD5=5ff5afb5c009f6198b5af9a8a0fa51e5
       - TZ=America/Montreal
