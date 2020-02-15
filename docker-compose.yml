@@ -12,6 +12,7 @@ services:
       - HTTP_TIMEOUT=3000
       - LOG_ENCODING=json
       - LOG_LEVEL=info
+      - NAMED_ROOT_MD5=5ff5afb5c009f6198b5af9a8a0fa51e5
       - TZ=America/Montreal
       - GIT=no
       - GIT_URL=
