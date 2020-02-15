@@ -7,11 +7,13 @@ services:
     network_mode: bridge
     environment:
       - OUTPUT_DIR=./files
-      - PERIOD=600
+      - PERIOD=24h
       - RESOLVE_HOSTNAMES=no
+      - HTTP_TIMEOUT=5s
       - LOG_ENCODING=console
       - LOG_LEVEL=info
       - NAMED_ROOT_MD5=5ff5afb5c009f6198b5af9a8a0fa51e5
+      - ROOT_ANCHORS_SHA256=45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770
       - TZ=America/Montreal
       - GIT=no
       - GIT_URL=

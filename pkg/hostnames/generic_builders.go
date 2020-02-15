@@ -1,14 +1,11 @@
 package hostnames
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
-	"github.com/qdm12/golibs/verification"
 )
 
 type sourceType struct {
@@ -18,14 +15,13 @@ type sourceType struct {
 	customPostCleanLine func(line string) string
 }
 
-func buildForSources(httpClient *http.Client, title string, sources []sourceType) (hostnames []string, err error) {
-	logging.Debugf("building %s hostnames...", title)
+func (b *builder) buildForSources(title string, sources []sourceType) (hostnames []string, err error) {
+	b.logger.Debug("building %s hostnames...", title)
 	uniqueHostnames := make(map[string]bool)
 	var newHostnames []string
 	var totalHostnames int
 	for _, source := range sources {
-		newHostnames, err = buildForSource(
-			httpClient,
+		newHostnames, err = b.buildForSource(
 			source.url,
 			source.customPreCleanLine,
 			source.customIsLineValid,
@@ -41,29 +37,30 @@ func buildForSources(httpClient *http.Client, title string, sources []sourceType
 	}
 	var sortedHostnames sort.StringSlice
 	for hostname := range uniqueHostnames {
-		if !verification.MatchHostname(hostname) {
-			logging.Warnf("hostname %q does not seem valid", hostname)
+		if !b.verifier.MatchHostname(hostname) {
+			b.logger.Warn("hostname %q does not seem valid", hostname)
 			continue
 		}
 		sortedHostnames = append(sortedHostnames, hostname)
 	}
 	sortedHostnames.Sort()
-	logging.Infof("built %s hostnames: %d fetched, %d unique", title, totalHostnames, sortedHostnames.Len())
+	b.logger.Info("built %s hostnames: %d fetched, %d unique", title, totalHostnames, sortedHostnames.Len())
 	return sortedHostnames, nil
 }
 
-func buildForSource(
-	httpClient *http.Client,
+func (b *builder) buildForSource(
 	URL string,
 	customPreCleanLine func(line string) string,
 	customIsLineValid func(line string) bool,
 	customPostCleanLine func(line string) string,
 ) (hostnames []string, err error) {
 	tStart := time.Now()
-	logging.Debugf("building hostnames %s...", URL)
-	content, err := network.GetContent(httpClient, URL, network.GetContentParamsType{DisguisedUserAgent: true})
+	b.logger.Debug("building hostnames %s...", URL)
+	content, status, err := b.client.GetContent(URL)
 	if err != nil {
 		return nil, err
+	} else if status != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status for %q is %d", URL, status)
 	}
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
@@ -73,6 +70,6 @@ func buildForSource(
 			hostnames = append(hostnames, line)
 		}
 	}
-	logging.Infof("built hostnames %s during %s", URL, time.Since(tStart))
+	b.logger.Info("built hostnames %s during %s", URL, time.Since(tStart))
 	return hostnames, nil
 }

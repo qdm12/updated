@@ -10,7 +10,7 @@ import (
 )
 
 // Branch creates a new branch from the current head
-func (c *Client) Branch(branchName string) error {
+func (c *client) Branch(branchName string) error {
 	headRef, err := c.repo.Head()
 	if err != nil {
 		return fmt.Errorf("cannot branch: %w", err)
@@ -22,7 +22,7 @@ func (c *Client) Branch(branchName string) error {
 }
 
 // CheckoutBranch force checkout to an existing branch
-func (c *Client) CheckoutBranch(branchName string) error {
+func (c *client) CheckoutBranch(branchName string) error {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("cannot checkout to branch %q: %w", branchName, err)
@@ -36,7 +36,7 @@ func (c *Client) CheckoutBranch(branchName string) error {
 
 // Pull pulls changes from the repository to the local directory.
 // It does not support merge conflicts and will return an error in this case.
-func (c *Client) Pull() error {
+func (c *client) Pull() error {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("cannot pull: %w", err)
@@ -51,7 +51,7 @@ func (c *Client) Pull() error {
 	return nil
 }
 
-func (c *Client) Status() (string, error) {
+func (c *client) Status() (string, error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return "", err
@@ -60,7 +60,7 @@ func (c *Client) Status() (string, error) {
 	return status.String(), err
 }
 
-func (c *Client) IsClean() (bool, error) {
+func (c *client) IsClean() (bool, error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return false, err
@@ -69,7 +69,7 @@ func (c *Client) IsClean() (bool, error) {
 	return status.IsClean(), err
 }
 
-func (c *Client) Add(filename string) error {
+func (c *client) Add(filename string) error {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (c *Client) Add(filename string) error {
 	return err
 }
 
-func (c *Client) Commit(message string) error {
+func (c *client) Commit(message string) error {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
 		return err
@@ -91,14 +91,14 @@ func (c *Client) Commit(message string) error {
 	return err
 }
 
-func (c *Client) Push() error {
+func (c *client) Push() error {
 	return c.repo.Push(&gogit.PushOptions{
 		Auth:     c.auth,
 		Progress: nil,
 	})
 }
 
-func (c *Client) UploadAllChanges(message string) (err error) {
+func (c *client) UploadAllChanges(message string) (err error) {
 	err = c.Add(".")
 	if err != nil {
 		return err

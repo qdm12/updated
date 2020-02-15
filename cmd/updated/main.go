@@ -4,20 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/kyokomi/emoji"
 
 	"github.com/qdm12/updated/internal/env"
 	"github.com/qdm12/updated/internal/params"
-	"github.com/qdm12/updated/pkg/dnscrypto"
-	"github.com/qdm12/updated/pkg/git"
-	"github.com/qdm12/updated/pkg/hostnames"
-	"github.com/qdm12/updated/pkg/ips"
+	"github.com/qdm12/updated/internal/run"
+	"github.com/qdm12/updated/internal/settings"
 
 	"github.com/qdm12/golibs/admin"
-	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
@@ -26,9 +22,20 @@ import (
 )
 
 func main() {
+	logger, err := logging.NewLogger(logging.JSONEncoding, logging.InfoLevel, -1)
+	if err != nil {
+		panic(err)
+	}
+	envParams := libparams.NewEnvParams()
+	encoding, level, nodeID, err := envParams.GetLoggerConfig()
+	if err != nil {
+		logger.Error(err)
+	} else {
+		logger, err = logging.NewLogger(encoding, level, nodeID)
+	}
 	if healthcheck.Mode(os.Args) {
 		if err := healthcheck.Query(); err != nil {
-			logging.Err(err)
+			logger.Error(err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -39,176 +46,46 @@ func main() {
 	fmt.Println("########## Give some " + emoji.Sprint(":heart:") + "at ##########")
 	fmt.Println("# github.com/qdm12/updated #")
 	fmt.Print("#####################################\n\n")
-	encoding, level, nodeID, err := libparams.GetLoggerConfig()
+	e := env.NewEnv(logger)
+	HTTPTimeout, err := envParams.GetHTTPTimeout(libparams.Default("3s"))
+	e.FatalOnError(err)
+	client := network.NewClient(HTTPTimeout)
+	e.SetClient(client)
+	gotify, err := setupGotify(envParams)
 	if err != nil {
-		logging.Error(err.Error())
+		logger.Error(err)
 	} else {
-		logging.InitLogger(encoding, level, nodeID)
+		e.SetGotify(gotify)
 	}
-	var e env.Env
-	HTTPTimeout, err := libparams.GetHTTPTimeout(3000)
-	e.HTTPClient = &http.Client{Timeout: HTTPTimeout}
-	e.Gotify = admin.InitGotify(e.HTTPClient)
-	outputDir, err := params.GetOutputDir()
-	e.FatalOnError(err)
-	logging.Infof("output directory is %q", outputDir)
-	namedRootMD5, err := params.GetNamedRootMD5()
-	e.FatalOnError(err)
-	rootAnchorsSHA256, err := params.GetRootAnchorsSHA256()
-	e.FatalOnError(err)
-	periodMinutes, err := params.GetPeriodMinutes()
-	e.FatalOnError(err)
-	resolveHostnames, err := params.GetResolveHostnames()
-	e.FatalOnError(err)
-	doGit, err := params.GetGit()
-	e.FatalOnError(err)
-	var knownHostsPath, keyPath, keyPassphrase, gitURL string
-	if doGit {
-		knownHostsPath, err = params.GetSSHKnownHostsFilepath()
-		e.FatalOnError(err)
-		keyPath, err = params.GetSSHKeyFilepath()
-		e.FatalOnError(err)
-		keyPassphrase, err = params.GetSSHKeyPassphrase()
-		e.FatalOnError(err)
-		gitURL, err = params.GetGitURL()
-		e.FatalOnError(err)
-	}
+	paramsGetter := params.NewParamsGetter(envParams)
+	allSettings, err := settings.Get(paramsGetter)
+	logger.Info(allSettings.String())
 	go signals.WaitForExit(e.ShutdownFromSignal)
-	errs := network.ConnectivityChecks(e.HTTPClient, []string{"github.com"})
+	errs := network.NewConnectivity(HTTPTimeout).Checks("github.com")
 	for _, err := range errs {
 		e.Warn(err)
 	}
-	e.Gotify.Notify("Program started", 1, "")
+	runner := run.NewRunner(allSettings, client, logger)
+	e.Notify("Program started", 1, "")
 	for {
-		go run(
-			e.HTTPClient,
-			e.CheckError,
-			outputDir,
-			periodMinutes,
-			namedRootMD5,
-			rootAnchorsSHA256,
-			resolveHostnames,
-			doGit,
-			knownHostsPath,
-			keyPath,
-			keyPassphrase,
-			gitURL,
-		)
-		time.Sleep(periodMinutes)
-	}
-}
-
-func run(httpClient *http.Client, checkOnError func(err error) error, outputDir string, periodMinutes time.Duration,
-	namedRootMD5, rootAnchorsSHA256 string, resolveHostnames, doGit bool, knownHostsPath, keyPath, keyPassphrase, gitURL string) {
-	tStart := time.Now()
-	defer func() {
-		executionTime := time.Since(tStart)
-		logging.Infof("overall execution took %s", executionTime)
-		logging.Infof("sleeping for %s", periodMinutes-executionTime)
-	}()
-	if doGit {
-		// Setup Git repository
-		gitClient, err := git.NewClient(knownHostsPath, keyPath, keyPassphrase, gitURL, outputDir)
-		if checkOnError(err) != nil {
-			return
-		}
-		err = gitClient.Pull()
-		if checkOnError(err) != nil {
-			return
-		}
-		// Upload changes when done
-		defer func() {
-			message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
-			err := gitClient.UploadAllChanges(message)
-			checkOnError(err)
+		go func() {
+			err := runner.Run()
+			e.CheckError(err)
 		}()
-	}
-
-	// Build named root from internic.net
-	namedRoot, err := dnscrypto.GetNamedRoot(httpClient, namedRootMD5)
-	if checkOnError(err) == nil {
-		err = files.WriteToFile(filepath.Join(outputDir, "named.root.updated"), namedRoot)
-		checkOnError(err)
-	}
-
-	// Build root anchors XML from data.iana.org
-	rootAnchorsXML, err := dnscrypto.GetRootAnchorsXML(httpClient, rootAnchorsSHA256)
-	if checkOnError(err) == nil {
-		err = files.WriteToFile(filepath.Join(outputDir, "root-anchors.xml.updated"), rootAnchorsXML)
-		checkOnError(err)
-	}
-
-	// Build root keys for Unbound
-	rootKeys, err := dnscrypto.ConvertRootAnchorsToRootKeys(rootAnchorsXML)
-	if checkOnError(err) == nil {
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "root.key.updated"), rootKeys)
-		checkOnError(err)
-	}
-
-	buildMalicious(httpClient, outputDir, resolveHostnames, checkOnError)
-
-	buildAds(httpClient, outputDir, resolveHostnames, checkOnError)
-
-	buildSurveillance(httpClient, outputDir, resolveHostnames, checkOnError)
-}
-
-func buildMalicious(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
-	hostnamesFailed := false
-	hostnames, err := hostnames.BuildMalicious(httpClient)
-	if checkOnError(err) == nil {
-		hostnamesFailed = true
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "malicious-hostnames.updated"), hostnames)
-		checkOnError(err)
-	}
-	IPs := []string{}
-	if !hostnamesFailed && resolveHostnames {
-		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
-	}
-	newIPs, err := ips.BuildMalicious(httpClient)
-	if checkOnError(err) == nil {
-		IPs = append(IPs, newIPs...)
-		var removedCount int
-		IPs, removedCount = ips.CleanIPs(IPs)
-		logging.Infof("Trimmed down %d IP address lines", removedCount)
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "malicious-ips.updated"), IPs)
-		checkOnError(err)
+		time.Sleep(allSettings.Period)
 	}
 }
 
-func buildAds(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
-	hostnamesFailed := false
-	hostnames, err := hostnames.BuildAds(httpClient)
-	if checkOnError(err) == nil {
-		hostnamesFailed = true
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "ads-hostnames.updated"), hostnames)
-		checkOnError(err)
+func setupGotify(envParams libparams.EnvParams) (admin.Gotify, error) {
+	URL, err := envParams.GetGotifyURL()
+	if err != nil {
+		return nil, err
+	} else if URL == nil {
+		return nil, nil
 	}
-	IPs := []string{}
-	if !hostnamesFailed && resolveHostnames {
-		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
+	token, err := envParams.GetGotifyToken()
+	if err != nil {
+		return nil, err
 	}
-	var removedCount int
-	IPs, removedCount = ips.CleanIPs(IPs)
-	logging.Infof("Trimmed down %d IP address lines", removedCount)
-	err = files.WriteLinesToFile(filepath.Join(outputDir, "ads-ips.updated"), IPs)
-	checkOnError(err)
-}
-
-func buildSurveillance(httpClient *http.Client, outputDir string, resolveHostnames bool, checkOnError func(error) error) {
-	hostnamesFailed := false
-	hostnames, err := hostnames.BuildSurveillance(httpClient)
-	if checkOnError(err) == nil {
-		hostnamesFailed = true
-		err = files.WriteLinesToFile(filepath.Join(outputDir, "surveillance-hostnames.updated"), hostnames)
-		checkOnError(err)
-	}
-	IPs := []string{}
-	if !hostnamesFailed && resolveHostnames {
-		IPs = append(IPs, ips.BuildIPsFromHostnames(hostnames)...)
-	}
-	var removedCount int
-	IPs, removedCount = ips.CleanIPs(IPs)
-	logging.Infof("Trimmed down %d IP address lines", removedCount)
-	err = files.WriteLinesToFile(filepath.Join(outputDir, "surveillance-ips.updated"), IPs)
-	checkOnError(err)
+	return admin.NewGotify(*URL, token, &http.Client{Timeout: time.Second}), nil
 }

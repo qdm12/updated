@@ -1,14 +1,13 @@
 package ips
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/qdm12/golibs/network"
-
-	"github.com/qdm12/golibs/logging"
 )
 
 var privateCIDRs []*net.IPNet
@@ -37,11 +36,10 @@ type sourceType struct {
 	customPostCleanLine func(line string) string
 }
 
-func buildForSources(httpClient *http.Client, title string, sources []sourceType) (IPs []string, err error) {
-	logging.Infof("building %s IPs...", title)
+func (b *builder) buildForSources(title string, sources []sourceType) (IPs []string, err error) {
+	b.logger.Info("building %s IPs...", title)
 	for _, source := range sources {
-		newIPs, err := buildForSource(
-			httpClient,
+		newIPs, err := b.buildForSource(
 			source.url,
 			source.customPreCleanLine,
 			source.customIsLineValid,
@@ -52,22 +50,23 @@ func buildForSources(httpClient *http.Client, title string, sources []sourceType
 		}
 		IPs = append(IPs, newIPs...)
 	}
-	logging.Infof("built %s IPs: %d IP address lines fetched", title, len(IPs))
+	b.logger.Info("built %s IPs: %d IP address lines fetched", title, len(IPs))
 	return IPs, nil
 }
 
-func buildForSource(
-	httpClient *http.Client,
+func (b *builder) buildForSource(
 	URL string,
 	customPreCleanLine func(line string) string,
 	customIsLineValid func(line string) bool,
 	customPostCleanLine func(line string) string,
 ) (IPs []string, err error) {
 	tStart := time.Now()
-	logging.Debugf("building IPs %s...", URL)
-	content, err := network.GetContent(httpClient, URL, network.GetContentParamsType{DisguisedUserAgent: true})
+	b.logger.Debug("building IPs %s...", URL)
+	content, status, err := b.client.GetContent(URL, network.UseRandomUserAgent())
 	if err != nil {
 		return nil, err
+	} else if status != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status code for %q is %d", URL, status)
 	}
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
@@ -89,10 +88,10 @@ func buildForSource(
 				}
 				continue
 			}
-			logging.Warnf("%q is not an IP address nor an IP subnet", line)
+			b.logger.Warn("%q is not an IP address nor an IP subnet", line)
 		}
 	}
-	logging.Infof("built IPs %s during %s", URL, time.Since(tStart))
+	b.logger.Info("built IPs %s during %s", URL, time.Since(tStart))
 	return IPs, nil
 }
 
