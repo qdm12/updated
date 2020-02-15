@@ -27,10 +27,7 @@ LABEL \
     org.opencontainers.image.documentation="https://github.com/qdm12/updated/blob/master/README.md" \
     org.opencontainers.image.source="https://github.com/qdm12/updated" \
     org.opencontainers.image.title="updated" \
-    org.opencontainers.image.description="Updated updates periodically files locally or to a Git repository" \
-    image-size="15.5MB" \
-    ram-usage="???MB" \
-    cpu-usage="Low"
+    org.opencontainers.image.description="Updated updates periodically files locally or to a Git repository"
 COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --chown=1000 known_hosts /known_hosts
