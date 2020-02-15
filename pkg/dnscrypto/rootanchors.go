@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/qdm12/golibs/network"
+	"github.com/qdm12/updated/pkg/constants"
 )
 
 // TrustAnchor holds the XML data of the root anchors
@@ -29,26 +30,25 @@ type TrustAnchor struct {
 }
 
 // GetRootAnchorsXML fetches the root anchors XML file online and parses it
-func GetRootAnchorsXML(httpClient *http.Client, rootAnchorsHexSHA256 string) (rootAnchorsXML []byte, err error) {
-	rootAnchorsXML, err = network.GetContent(
-		httpClient,
-		"https://data.iana.org/root-anchors/root-anchors.xml",
-		network.GetContentParamsType{DisguisedUserAgent: true})
+func (d *dnsCrypto) GetRootAnchorsXML() (rootAnchorsXML []byte, err error) {
+	rootAnchorsXML, status, err := d.client.GetContent(constants.RootAnchorsURL, network.UseRandomUserAgent())
 	if err != nil {
 		return nil, err
+	} else if status != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status is %d", status)
 	}
 	sum := sha256.Sum256(rootAnchorsXML)
 	hexSum := hex.EncodeToString(sum[:])
-	if hexSum != rootAnchorsHexSHA256 {
-		return nil, fmt.Errorf("root anchors SHA256 sum %q is not expected sum %q", hexSum, rootAnchorsHexSHA256)
+	if hexSum != constants.RootAnchorsSHA256Sum {
+		return nil, fmt.Errorf("root anchors SHA256 sum %q is not expected sum %q", hexSum, constants.RootAnchorsSHA256Sum)
 	}
 	return rootAnchorsXML, err
 }
 
 // ConvertRootAnchorsToRootKeys converts root anchors XML data to a list of DNS root keys
-func ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error) {
-	trustAnchor, err := parseRootAnchors(rootAnchorsXML)
-	if err != nil {
+func (d *dnsCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error) {
+	var trustAnchor TrustAnchor
+	if err := xml.Unmarshal(rootAnchorsXML, &trustAnchor); err != nil {
 		return nil, err
 	}
 	for _, keyDigest := range trustAnchor.KeyDigest {
@@ -57,9 +57,4 @@ func ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err
 		rootKeys = append(rootKeys, rootKey)
 	}
 	return rootKeys, nil
-}
-
-func parseRootAnchors(rootAnchorsXML []byte) (trustAnchor TrustAnchor, err error) {
-	err = xml.Unmarshal(rootAnchorsXML, &trustAnchor)
-	return trustAnchor, err
 }

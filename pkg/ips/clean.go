@@ -4,20 +4,19 @@ import (
 	"net"
 	"sort"
 
-	"github.com/qdm12/golibs/logging"
 	"github.com/yl2chen/cidranger"
 )
 
 // CleanIPs removes duplicates IPs and CIDRs, and IPs contained in CIDRs
-func CleanIPs(IPs []string) (cleanIPs []string, removedCount int) {
+func (b *builder) CleanIPs(IPs []string) (cleanIPs []string, removedCount int, warnings []string) {
 	uniqueIPs := makeUniqueIPs(IPs)
 	uniqueCIDRs := makeUniqueCIDRs(IPs)
 	ranger := buildCIDRRanger(uniqueCIDRs)
-	uniqueIPs = removeIPsInCIDRs(uniqueIPs, ranger)
+	uniqueIPs, warnings = removeIPsInCIDRs(uniqueIPs, ranger)
 	// TODO CIDR inside CIDR?
 	// TODO Combine CIDRs (check mask only)
 	cleanIPs = sortStringSlice(append(uniqueCIDRs, uniqueIPs...))
-	return cleanIPs, len(IPs) - len(cleanIPs)
+	return cleanIPs, len(IPs) - len(cleanIPs), warnings
 }
 
 func makeUniqueIPs(lines []string) (uniqueIPs []string) {
@@ -61,7 +60,7 @@ func buildCIDRRanger(CIDRs []string) (ranger cidranger.Ranger) {
 	return ranger
 }
 
-func removeIPsInCIDRs(IPs []string, ranger cidranger.Ranger) (cleanedIPs []string) {
+func removeIPsInCIDRs(IPs []string, ranger cidranger.Ranger) (cleanedIPs []string, warnings []string) {
 	for _, IP := range IPs {
 		netIP := net.ParseIP(IP)
 		if netIP == nil {
@@ -69,14 +68,14 @@ func removeIPsInCIDRs(IPs []string, ranger cidranger.Ranger) (cleanedIPs []strin
 		}
 		contains, err := ranger.Contains(netIP)
 		if err != nil {
-			logging.Werr(err)
+			warnings = append(warnings, err.Error())
 			continue
 		}
 		if !contains {
 			cleanedIPs = append(cleanedIPs, IP)
 		}
 	}
-	return cleanedIPs
+	return cleanedIPs, warnings
 }
 
 func sortStringSlice(slice []string) []string {

@@ -36,9 +36,9 @@ COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --chown=1000 known_hosts /known_hosts
 ENV \
     OUTPUT_DIR=./files \
-    PERIOD=600 \
+    PERIOD=24h \
     RESOLVE_HOSTNAMES=no \
-    HTTP_TIMEOUT=3000 \
+    HTTP_TIMEOUT=3s \
     LOG_ENCODING=console \
     LOG_LEVEL=info \
     TZ=America/Montreal \

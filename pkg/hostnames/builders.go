@@ -1,11 +1,10 @@
 package hostnames
 
 import (
-	"net/http"
 	"strings"
 )
 
-func BuildSurveillance(httpClient *http.Client) (hostnames []string, err error) {
+func (b *builder) BuildSurveillance() (hostnames []string, err error) {
 	sources := []sourceType{
 		sourceType{
 			url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa",
@@ -23,10 +22,10 @@ func BuildSurveillance(httpClient *http.Client) (hostnames []string, err error) 
 			},
 		},
 	}
-	return buildForSources(httpClient, "surveillance", sources)
+	return b.buildForSources("surveillance", sources)
 }
 
-func BuildMalicious(httpClient *http.Client) (hostnames []string, err error) {
+func (b *builder) BuildMalicious() (hostnames []string, err error) {
 	sources := []sourceType{
 		sourceType{
 			url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -60,10 +59,10 @@ func BuildMalicious(httpClient *http.Client) (hostnames []string, err error) {
 			},
 		},
 	}
-	return buildForSources(httpClient, "malicious", sources)
+	return b.buildForSources("malicious", sources)
 }
 
-func BuildAds(httpClient *http.Client) (hostnames []string, err error) {
+func (b *builder) BuildAds() (hostnames []string, err error) {
 	sources := []sourceType{
 		sourceType{
 			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt",
@@ -87,5 +86,5 @@ func BuildAds(httpClient *http.Client) (hostnames []string, err error) {
 			},
 		},
 	}
-	return buildForSources(httpClient, "ads", sources)
+	return b.buildForSources("ads", sources)
 }

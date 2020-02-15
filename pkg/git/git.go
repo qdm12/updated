@@ -9,9 +9,21 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
+type Client interface {
+	Branch(branchName string) error
+	CheckoutBranch(branchName string) error
+	Pull() error
+	Status() (string, error)
+	IsClean() (bool, error)
+	Add(filename string) error
+	Commit(message string) error
+	Push() error
+	UploadAllChanges(message string) (err error)
+}
+
 // Client contains an authentication method and a repository object.
 // It is used for all Git related operations.
-type Client struct {
+type client struct {
 	auth transport.AuthMethod
 	repo *gogit.Repository
 }
@@ -19,7 +31,7 @@ type Client struct {
 // NewClient creates a new Git Client with an SSH key, the repository
 // URL and an absolute path where to read/write the repository.
 // SSH was chosen as it is available on all Git servers (Github, Gitea, Gitlab, etc.)
-func NewClient(SSHKnownHostsPath, SSHKeyPath, SSHKeyPassword, URL, absolutePath string) (*Client, error) {
+func NewClient(SSHKnownHostsPath, SSHKeyPath, SSHKeyPassword, URL, absolutePath string) (Client, error) {
 	// Only PEM private keys supported
 	auth, err := ssh.NewPublicKeysFromFile("git", SSHKeyPath, SSHKeyPassword)
 	if err != nil {
@@ -40,7 +52,7 @@ func NewClient(SSHKnownHostsPath, SSHKeyPath, SSHKeyPassword, URL, absolutePath 
 			return nil, fmt.Errorf("cannot open or clone the repository for URL %q and path %q: %w", URL, absolutePath, err)
 		}
 	}
-	return &Client{
+	return &client{
 		auth: auth,
 		repo: repo,
 	}, nil
