@@ -8,10 +8,6 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/updated.svg)](https://github.com/qdm12/updated/issues)
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/updated.svg)](https://github.com/qdm12/updated/issues)
 
-| Image size | RAM usage | CPU usage |
-| --- | --- | --- |
-| 15.5MB | ???MB | Low |
-
 ## Features
 
 Periodically build:
@@ -23,6 +19,8 @@ Periodically build:
 - Root keys to be used by Unbound
 
 and optionally upload the changes to a Git repository using an SSH key.
+
+Based on Scratch with a total uncompressed size of 15.4MB
 
 ## Setup
 

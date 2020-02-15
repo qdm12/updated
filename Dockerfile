@@ -3,6 +3,9 @@ ARG GO_VERSION=1.13.7
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
+RUN mkdir /files && \
+    chown 1000 /files && \
+    chmod 700 /files
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ENV CGO_ENABLED=0
@@ -15,7 +18,7 @@ COPY internal ./internal
 COPY pkg ./pkg
 RUN go build -ldflags="-s -w" -o app cmd/app/main.go
 
-FROM alpine:${ALPINE_VERSION}
+FROM scratch
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL \
@@ -30,6 +33,7 @@ LABEL \
     org.opencontainers.image.description="Updated updates periodically files locally or to a Git repository"
 COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=alpine --chown=1000 /files /files
 COPY --chown=1000 known_hosts /known_hosts
 ENV \
     OUTPUT_DIR=./files \
