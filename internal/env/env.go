@@ -14,7 +14,7 @@ import (
 type Env interface {
 	SetGotify(gotify admin.Gotify)
 	SetClient(client network.Client)
-	Notify(title string, priority int, args ...interface{})
+	Notify(priority int, args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})
 	CheckError(err error)
@@ -44,9 +44,9 @@ func (e *env) SetClient(client network.Client) {
 }
 
 // Notify sends a notification to the Gotify server.
-func (e *env) Notify(title string, priority int, args ...interface{}) {
+func (e *env) Notify(priority int, args ...interface{}) {
 	if e.gotify != nil {
-		err := e.gotify.Notify(title, priority, args...)
+		err := e.gotify.Notify("Updated", priority, args...)
 		if err != nil {
 			e.logger.Error(err)
 		}
@@ -56,13 +56,13 @@ func (e *env) Notify(title string, priority int, args ...interface{}) {
 // Info logs a message and sends a notification to the Gotify server.
 func (e *env) Info(args ...interface{}) {
 	e.logger.Info(args...)
-	e.Notify("Info", 1, args...)
+	e.Notify(1, args...)
 }
 
 // Warn logs a message and sends a notification to the Gotify server.
 func (e *env) Warn(args ...interface{}) {
 	e.logger.Warn(args...)
-	e.Notify("Warning", 2, args...)
+	e.Notify(2, args...)
 }
 
 // CheckError logs an error and sends a notification to the Gotify server
@@ -70,7 +70,7 @@ func (e *env) Warn(args ...interface{}) {
 func (e *env) CheckError(err error) {
 	if err != nil {
 		e.logger.Error(err)
-		e.Notify("Error", 3, err)
+		e.Notify(3, err)
 	}
 }
 
@@ -100,7 +100,7 @@ func (e *env) Shutdown() (exitCode int) {
 // callback to a function which would catch such signal.
 func (e *env) ShutdownFromSignal(signal string) (exitCode int) {
 	e.logger.Warn("Program stopped with signal %s", signal)
-	e.Notify("OS Signal", 1, "Caught OS signal "+signal)
+	e.Notify(1, "Caught OS signal "+signal)
 	return e.Shutdown()
 }
 
@@ -108,7 +108,7 @@ func (e *env) ShutdownFromSignal(signal string) (exitCode int) {
 // It exits the program with an exit code of 1.
 func (e *env) Fatal(args ...interface{}) {
 	e.logger.Error(args...)
-	e.Notify("Fatal", 4, args...)
+	e.Notify(4, args...)
 	e.Shutdown()
 	os.Exit(1)
 }
