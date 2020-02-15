@@ -1,5 +1,5 @@
-ARG ALPINE_VERSION=3.10
-ARG GO_VERSION=1.13
+ARG ALPINE_VERSION=3.11
+ARG GO_VERSION=1.13.7
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
@@ -15,7 +15,7 @@ COPY internal ./internal
 COPY pkg ./pkg
 RUN go build -ldflags="-s -w" -o app cmd/app/main.go
 
-FROM alpine:3.10
+FROM alpine:${ALPINE_VERSION}
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL \
