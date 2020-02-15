@@ -16,6 +16,7 @@ RUN go mod download 2>&1
 COPY cmd/updated/main.go cmd/app/main.go
 COPY internal ./internal
 COPY pkg ./pkg
+RUN go test ./...
 RUN go build -ldflags="-s -w" -o app cmd/app/main.go
 
 FROM scratch
