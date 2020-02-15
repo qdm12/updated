@@ -1,4 +1,4 @@
-# Updated (UNFINISHED)
+# Updated
 
 *Go program to update and push files periodically to a Git repository*
 
@@ -10,33 +10,21 @@
 
 ## Features
 
-Periodically build:
-
-- A list of unique malicious hostnames
-- A list of unique malicious IP addresses
-- InterNIC's named roots for DNS resolvers
-- Root anchors XML for DNS resolvers
-- Root keys to be used by Unbound
-
-and optionally upload the changes to a Git repository using an SSH key.
-
-Based on Scratch with a total uncompressed size of 15.4MB
-
-Compatible with amd64, x86 and ARM v6/v7/v8
+- Periodically builds
+    - A list of unique malicious hostnames
+    - A list of unique malicious IP addresses
+    - A list of unique ads hostnames
+    - A list of unique surveillance hostnames
+    - InterNIC's named roots for DNS resolvers
+    - Root anchors XML for DNS resolvers
+    - Root keys to be used by Unbound
+- Optionally upload the changes to a Git repository using an SSH key
+- Based on the Scratch image with a total uncompressed size of 15.4MB
+- Compatible with amd64, x86 and ARM v6/v7/v8
 
 ## Setup
 
 ### Using Docker (recommended)
-
-1. <details><summary>CLICK IF YOU HAVE AN ARM DEVICE</summary><p>
-
-    You need to build the Docker image on your device:
-
-    ```sh
-    docker build -t qmcgaw/updated https://github.com/qdm12/updated.git
-    ```
-
-    </p></details>
 
 1. For bind mounting, create a `files` directory with the right permissions:
 
@@ -131,4 +119,3 @@ This container is used to periodically update files at [github.com/qdm12/files](
 ## License
 
 This repository is under an [MIT license](https://github.com/qdm12/updated/master/license)
-
