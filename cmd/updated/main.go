@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyokomi/emoji"
-
 	"github.com/qdm12/updated/internal/env"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
@@ -40,12 +38,13 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	fmt.Println("#####################################")
-	fmt.Println("########## Updated #########")
-	fmt.Println("########## by Quentin McGaw #########")
-	fmt.Println("########## Give some " + emoji.Sprint(":heart:") + "at ##########")
-	fmt.Println("# github.com/qdm12/updated #")
-	fmt.Print("#####################################\n\n")
+	fmt.Print(`
+#####################################
+############## Updated ##############
+########## by Quentin McGaw #########
+##### github.com/qdm12/updated ######
+#####################################
+`)
 	e := env.NewEnv(logger)
 	HTTPTimeout, err := envParams.GetHTTPTimeout(libparams.Default("3s"))
 	e.FatalOnError(err)
