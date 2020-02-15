@@ -78,7 +78,7 @@ This Go program only reads parameters from environment variables for ease of use
     | `PERIOD` | `600` | Integer from `1` | Period in minutes between each run |
     | `RESOLVE_HOSTNAMES` | `no` | `yes` or `no` | Resolve hostnames found to obtain IP addresses |
     | `HTTP_TIMEOUT` | `3000` | *integer* from 1 | Default HTTP client timeout in milliseconds |
-    | `LOG_ENCODING` | `json` | `json`, `console` | Logging format |
+    | `LOG_ENCODING` | `console` | `json`, `console` | Logging format |
     | `LOG_LEVEL` | `info` | `debug`, `info`, `warning`, `error` | Logging level |
     | `TZ` | `America/Montreal` | *string* | Timezone |
 

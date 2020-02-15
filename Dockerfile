@@ -39,7 +39,7 @@ ENV \
     PERIOD=600 \
     RESOLVE_HOSTNAMES=no \
     HTTP_TIMEOUT=3000 \
-    LOG_ENCODING=json \
+    LOG_ENCODING=console \
     LOG_LEVEL=info \
     TZ=America/Montreal \
     GIT=no \
