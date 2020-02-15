@@ -71,8 +71,10 @@ func (p *paramsGetter) GetSSHKeyPassphrase() (passphrase string, err error) {
 // GetGitURL obtains the Git repository URL to interact with,
 // from the environment variable GIT_URL.
 func (p *paramsGetter) GetGitURL() (URL string, err error) {
-	u, err := p.envParams.GetURL("GIT_URL")
-	URL = u.String()
+	URL, err = p.envParams.GetEnv("GIT_URL", libparams.Compulsory())
+	if err != nil {
+		return "", err
+	}
 	if !regexp.MustCompile(`((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?`).MatchString(URL) {
 		return "", fmt.Errorf("environment variable GIT_URL value %q is not valid", URL)
 	}

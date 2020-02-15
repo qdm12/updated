@@ -50,6 +50,12 @@ func Get(paramsGetter params.ParamsGetter) (s Settings, err error) {
 	} else if !git {
 		return s, nil
 	}
+	s.Git = new(struct {
+		GitURL           string
+		SSHKnownHosts    string
+		SSHKey           string
+		SSHKeyPassphrase string
+	})
 	s.Git.GitURL, err = paramsGetter.GetGitURL()
 	if err != nil {
 		return s, err
