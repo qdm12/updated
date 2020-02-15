@@ -22,6 +22,8 @@ and optionally upload the changes to a Git repository using an SSH key.
 
 Based on Scratch with a total uncompressed size of 15.4MB
 
+Compatible with amd64, x86 and ARM v6/v7/v8
+
 ## Setup
 
 ### Using Docker (recommended)
@@ -114,8 +116,6 @@ This Go program only reads parameters from environment variables for ease of use
 
 1. Depending on your system, change its permissions `chmod +x updated`
 1. Run the program `./updated`
-
-If you are curious about more possibilities (i.e. cross-compilation), please open an issue.
 
 ## Why
 
