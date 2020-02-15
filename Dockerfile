@@ -5,14 +5,15 @@ FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
-RUN apk --update add git g++
+ENV CGO_ENABLED=0
+RUN apk --update add git
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
 RUN go mod download 2>&1
 COPY cmd/updated/main.go cmd/app/main.go
 COPY internal ./internal
 COPY pkg ./pkg
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o app cmd/app/main.go
+RUN go build -ldflags="-s -w" -o app cmd/app/main.go
 
 FROM alpine:3.10
 ARG BUILD_DATE
