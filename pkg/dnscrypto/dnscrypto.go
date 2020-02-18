@@ -9,9 +9,14 @@ type DNSCrypto interface {
 }
 
 type dnsCrypto struct {
-	client network.Client
+	client               network.Client
+	namedRootHexMD5      string
+	rootAnchorsHexSHA256 string
 }
 
-func NewDNSCrypto(client network.Client) DNSCrypto {
-	return &dnsCrypto{client}
+func NewDNSCrypto(client network.Client, namedRootHexMD5, rootAnchorsHexSHA256 string) DNSCrypto {
+	return &dnsCrypto{
+		client:               client,
+		namedRootHexMD5:      namedRootHexMD5,
+		rootAnchorsHexSHA256: rootAnchorsHexSHA256}
 }

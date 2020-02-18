@@ -20,8 +20,8 @@ func (d *dnsCrypto) GetNamedRoot() (namedRoot []byte, err error) {
 	}
 	sum := md5.Sum(namedRoot)
 	hexSum := hex.EncodeToString(sum[:])
-	if hexSum != constants.NamedRootMD5Sum {
-		return nil, fmt.Errorf("named root MD5 sum %q is not expected sum %q", hexSum, constants.NamedRootMD5Sum)
+	if hexSum != d.namedRootHexMD5 {
+		return nil, fmt.Errorf("named root MD5 sum %q is not expected sum %q", hexSum, d.namedRootHexMD5)
 	}
 	return namedRoot, nil
 }

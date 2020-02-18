@@ -37,7 +37,7 @@ func NewRunner(settings settings.Settings, client network.Client, logger logging
 		client:           client,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
-		dnscrypto:        dnscrypto.NewDNSCrypto(client),
+		dnscrypto:        dnscrypto.NewDNSCrypto(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
 		fileManager:      files.NewFileManager(),
 	}
 }

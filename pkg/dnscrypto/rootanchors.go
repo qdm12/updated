@@ -39,8 +39,8 @@ func (d *dnsCrypto) GetRootAnchorsXML() (rootAnchorsXML []byte, err error) {
 	}
 	sum := sha256.Sum256(rootAnchorsXML)
 	hexSum := hex.EncodeToString(sum[:])
-	if hexSum != constants.RootAnchorsSHA256Sum {
-		return nil, fmt.Errorf("root anchors SHA256 sum %q is not expected sum %q", hexSum, constants.RootAnchorsSHA256Sum)
+	if hexSum != d.rootAnchorsHexSHA256 {
+		return nil, fmt.Errorf("root anchors SHA256 sum %q is not expected sum %q", hexSum, d.rootAnchorsHexSHA256)
 	}
 	return rootAnchorsXML, err
 }
