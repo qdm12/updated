@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/qdm12/updated/internal/params"
@@ -80,24 +80,26 @@ func (s *Settings) String() (result string) {
 	if s.ResolveHostnames {
 		resolveHostnamesStr = "yes"
 	}
-	kv := map[string]string{
-		"output directory":        s.OutputDir,
-		"period":                  s.Period.String(),
-		"resolve hostnames":       resolveHostnamesStr,
-		"named root MD5 sum":      s.HexSums.NamedRootMD5,
-		"root anchors SHA256 sum": s.HexSums.RootAnchorsSHA256,
+	lines := []string{
+		"output directory: " + s.OutputDir,
+		"period: " + s.Period.String(),
+		"resolve hostnames: " + resolveHostnamesStr,
+		"named root MD5 sum: " + s.HexSums.NamedRootMD5,
+		"root anchors SHA256 sum: " + s.HexSums.RootAnchorsSHA256,
 	}
 	if s.Git == nil {
-		kv["Git"] = "disabled"
+		lines = append(lines, "Git: disabled")
 	} else {
-		kv["Git URL"] = s.Git.GitURL
-		kv["SSH known hosts file"] = s.Git.SSHKnownHosts
-		kv["SSH key file"] = s.Git.SSHKey
-		kv["SSH key passphrase file"] = s.Git.SSHKeyPassphrase
+		passhpraseSet := "no"
+		if len(s.Git.SSHKeyPassphrase) > 0 {
+			passhpraseSet = "yes"
+		}
+		lines = append(lines, []string{
+			"Git URL: " + s.Git.GitURL,
+			"SSH known hosts file: " + s.Git.SSHKnownHosts,
+			"SSH key file: " + s.Git.SSHKey,
+			"SSH key passphrase set: " + passhpraseSet,
+		}...)
 	}
-	result = "Settings:\n"
-	for k, v := range kv {
-		result += fmt.Sprintf("|-- %s: %s\n", k, v)
-	}
-	return result
+	return "Settings:\n|--" + strings.Join(lines, "\n|--") + "\n"
 }
