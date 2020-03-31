@@ -8,15 +8,19 @@ import (
 )
 
 // CleanIPs removes duplicates IPs and CIDRs, and IPs contained in CIDRs
-func (b *builder) CleanIPs(IPs []string) (cleanIPs []string, removedCount int, warnings []string) {
-	uniqueIPs := makeUniqueIPs(IPs)
-	uniqueCIDRs := makeUniqueCIDRs(IPs)
-	ranger := buildCIDRRanger(uniqueCIDRs)
-	uniqueIPs, warnings = removeIPsInCIDRs(uniqueIPs, ranger)
+func (b *builder) CleanIPs(ips []string) (cleanIPs []string, removedCount int, warnings []string) {
+	uniqueIPs := makeUniqueIPs(ips)
+	uniqueCIDRs := makeUniqueCIDRs(ips)
+	ranger, err := buildCIDRRanger(uniqueCIDRs)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+	}
+	uniqueIPs, newWarnings := removeIPsInCIDRs(uniqueIPs, ranger)
+	warnings = append(warnings, newWarnings...)
 	// TODO CIDR inside CIDR?
 	// TODO Combine CIDRs (check mask only)
 	cleanIPs = sortStringSlice(append(uniqueCIDRs, uniqueIPs...))
-	return cleanIPs, len(IPs) - len(cleanIPs), warnings
+	return cleanIPs, len(ips) - len(cleanIPs), warnings
 }
 
 func makeUniqueIPs(lines []string) (uniqueIPs []string) {
@@ -49,19 +53,21 @@ func makeUniqueCIDRs(lines []string) (uniqueCIDRs []string) {
 	return uniqueCIDRs
 }
 
-func buildCIDRRanger(CIDRs []string) (ranger cidranger.Ranger) {
+func buildCIDRRanger(cidrs []string) (ranger cidranger.Ranger, err error) {
 	ranger = cidranger.NewPCTrieRanger()
-	for _, CIDR := range CIDRs {
+	for _, CIDR := range cidrs {
 		_, CIDRPtr, err := net.ParseCIDR(CIDR)
 		if err == nil {
-			ranger.Insert(cidranger.NewBasicRangerEntry(*CIDRPtr))
+			if err := ranger.Insert(cidranger.NewBasicRangerEntry(*CIDRPtr)); err != nil {
+				return nil, err
+			}
 		}
 	}
-	return ranger
+	return ranger, nil
 }
 
-func removeIPsInCIDRs(IPs []string, ranger cidranger.Ranger) (cleanedIPs []string, warnings []string) {
-	for _, IP := range IPs {
+func removeIPsInCIDRs(ips []string, ranger cidranger.Ranger) (cleanedIPs []string, warnings []string) {
+	for _, IP := range ips {
 		netIP := net.ParseIP(IP)
 		if netIP == nil {
 			continue

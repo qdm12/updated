@@ -2,7 +2,7 @@ package ips
 
 // BuildMalicious obtains lists of IP addresses from different web sources
 // and returns a list of CIDR IP ranges of malicious IP addresses
-func (b *builder) BuildMalicious() (IPs []string, err error) {
+func (b *builder) BuildMalicious() (ips []string, err error) {
 	sources := []sourceType{
 		sourceType{
 			url: "https://iplists.firehol.org/files/firehol_level1.netset",
@@ -26,7 +26,7 @@ func (b *builder) BuildMalicious() (IPs []string, err error) {
 
 // BuildIPsFromHostnames builds a list of IP addresses obtained by resolving
 // some hostnames given.
-func (b *builder) BuildIPsFromHostnames(hostnames []string) (IPs []string) {
+func (b *builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
 	b.logger.Info("finding IP addresses from %d hostnames", len(hostnames))
 	ch := make(chan []string)
 	for _, hostname := range hostnames {
@@ -45,14 +45,10 @@ func (b *builder) BuildIPsFromHostnames(hostnames []string) (IPs []string) {
 			ch <- IPs
 		}(hostname)
 	}
-	N := len(hostnames)
-	for N > 0 {
-		select {
-		case newIPs := <-ch:
-			N--
-			IPs = append(IPs, newIPs...)
-		}
+	for n := 0; n < len(hostnames); n++ {
+		newIPs := <-ch
+		ips = append(ips, newIPs...)
 	}
-	b.logger.Info("found %d IP addresses from %d hostnames", len(IPs), len(hostnames))
-	return IPs
+	b.logger.Info("found %d IP addresses from %d hostnames", len(ips), len(hostnames))
+	return ips
 }

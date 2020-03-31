@@ -4,12 +4,11 @@ import (
 	"time"
 
 	"github.com/qdm12/golibs/files"
-	"github.com/qdm12/golibs/verification"
-
 	libparams "github.com/qdm12/golibs/params"
+	"github.com/qdm12/golibs/verification"
 )
 
-type ParamsGetter interface {
+type Getter interface {
 	// General getters
 	GetOutputDir() (path string, err error)
 	GetPeriod() (period time.Duration, err error)
@@ -29,14 +28,14 @@ type ParamsGetter interface {
 	GetResolveHostnames() (resolveHostnames bool, err error)
 }
 
-type paramsGetter struct {
+type getter struct {
 	envParams   libparams.EnvParams
 	verifier    verification.Verifier
 	fileManager files.FileManager
 }
 
-func NewParamsGetter(envParams libparams.EnvParams) ParamsGetter {
-	return &paramsGetter{
+func NewGetter(envParams libparams.EnvParams) Getter {
+	return &getter{
 		envParams:   envParams,
 		verifier:    verification.NewVerifier(),
 		fileManager: files.NewFileManager(),
@@ -45,12 +44,12 @@ func NewParamsGetter(envParams libparams.EnvParams) ParamsGetter {
 
 // GetOutputDir obtains the output directory path to write files to
 // from the environment variable OUTPUT_DIR and defaults to ./files
-func (p *paramsGetter) GetOutputDir() (path string, err error) {
+func (p *getter) GetOutputDir() (path string, err error) {
 	return p.envParams.GetPath("OUTPUT_DIR", libparams.Default("./files"))
 }
 
 // GetPeriod obtains the period in minutes from the PERIOD environment
 // variable. It defaults to 600 minutes.
-func (p *paramsGetter) GetPeriod() (periodMinutes time.Duration, err error) {
+func (p *getter) GetPeriod() (periodMinutes time.Duration, err error) {
 	return p.envParams.GetDuration("PERIOD", libparams.Default("600m"))
 }

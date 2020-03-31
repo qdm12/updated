@@ -49,18 +49,18 @@ func (b *builder) buildForSources(title string, sources []sourceType) (hostnames
 }
 
 func (b *builder) buildForSource(
-	URL string,
+	url string,
 	customPreCleanLine func(line string) string,
 	customIsLineValid func(line string) bool,
 	customPostCleanLine func(line string) string,
 ) (hostnames []string, err error) {
 	tStart := time.Now()
-	b.logger.Debug("building hostnames %s...", URL)
-	content, status, err := b.client.GetContent(URL)
+	b.logger.Debug("building hostnames %s...", url)
+	content, status, err := b.client.GetContent(url)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status for %q is %d", URL, status)
+		return nil, fmt.Errorf("HTTP status for %q is %d", url, status)
 	}
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
@@ -70,6 +70,6 @@ func (b *builder) buildForSource(
 			hostnames = append(hostnames, line)
 		}
 	}
-	b.logger.Info("built hostnames %s during %s", URL, time.Since(tStart))
+	b.logger.Info("built hostnames %s during %s", url, time.Since(tStart))
 	return hostnames, nil
 }

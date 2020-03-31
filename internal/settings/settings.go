@@ -23,28 +23,28 @@ type Settings struct {
 	}
 }
 
-func Get(paramsGetter params.ParamsGetter) (s Settings, err error) {
-	s.OutputDir, err = paramsGetter.GetOutputDir()
+func Get(getter params.Getter) (s Settings, err error) {
+	s.OutputDir, err = getter.GetOutputDir()
 	if err != nil {
 		return s, err
 	}
-	s.HexSums.NamedRootMD5, err = paramsGetter.GetNamedRootMD5()
+	s.HexSums.NamedRootMD5, err = getter.GetNamedRootMD5()
 	if err != nil {
 		return s, err
 	}
-	s.HexSums.RootAnchorsSHA256, err = paramsGetter.GetRootAnchorsSHA256()
+	s.HexSums.RootAnchorsSHA256, err = getter.GetRootAnchorsSHA256()
 	if err != nil {
 		return s, err
 	}
-	s.Period, err = paramsGetter.GetPeriod()
+	s.Period, err = getter.GetPeriod()
 	if err != nil {
 		return s, err
 	}
-	s.ResolveHostnames, err = paramsGetter.GetResolveHostnames()
+	s.ResolveHostnames, err = getter.GetResolveHostnames()
 	if err != nil {
 		return s, err
 	}
-	git, err := paramsGetter.GetGit()
+	git, err := getter.GetGit()
 	if err != nil {
 		return s, err
 	} else if !git {
@@ -56,19 +56,19 @@ func Get(paramsGetter params.ParamsGetter) (s Settings, err error) {
 		SSHKey           string
 		SSHKeyPassphrase string
 	})
-	s.Git.GitURL, err = paramsGetter.GetGitURL()
+	s.Git.GitURL, err = getter.GetGitURL()
 	if err != nil {
 		return s, err
 	}
-	s.Git.SSHKnownHosts, err = paramsGetter.GetSSHKnownHostsFilepath()
+	s.Git.SSHKnownHosts, err = getter.GetSSHKnownHostsFilepath()
 	if err != nil {
 		return s, err
 	}
-	s.Git.SSHKey, err = paramsGetter.GetSSHKeyFilepath()
+	s.Git.SSHKey, err = getter.GetSSHKeyFilepath()
 	if err != nil {
 		return s, err
 	}
-	s.Git.SSHKeyPassphrase, err = paramsGetter.GetSSHKeyPassphrase()
+	s.Git.SSHKeyPassphrase, err = getter.GetSSHKeyPassphrase()
 	if err != nil {
 		return s, err
 	}

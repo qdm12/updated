@@ -6,10 +6,8 @@ import (
 	"github.com/qdm12/updated/internal/constants"
 )
 
-func (r *runner) buildBlockLists(
-	buildHostnames, buildIps func() ([]string, error),
-	hostnamesFilename, ipsFilename string,
-) error {
+func (r *runner) buildBlockLists(buildHostnames, buildIps func() ([]string, error),
+	hostnamesFilename, ipsFilename string) error {
 	hostnames, err := buildHostnames()
 	if err != nil {
 		return err
@@ -36,7 +34,7 @@ func (r *runner) buildBlockLists(
 	}
 	r.logger.Info("Trimmed down %d IP address lines", removedCount)
 	return r.fileManager.WriteLinesToFile(
-		filepath.Join(r.settings.OutputDir, constants.MaliciousIPsFilename),
+		filepath.Join(r.settings.OutputDir, ipsFilename),
 		IPs)
 }
 

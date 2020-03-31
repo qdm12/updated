@@ -9,13 +9,13 @@ import (
 
 // GetGit obtains 'yes' or 'no' to do Git operations, from the environment
 // variable GIT, and defaults to no.
-func (p *paramsGetter) GetGit() (doGit bool, err error) {
+func (p *getter) GetGit() (doGit bool, err error) {
 	return p.envParams.GetYesNo("GIT", libparams.Default("no"))
 }
 
 // GetSSHKnownHostsFilepath obtains the file path of the SSH known_hosts file,
 // from the environment variable SSH_KNOWN_HOSTS and defaults to /known_hosts.
-func (p *paramsGetter) GetSSHKnownHostsFilepath() (filePath string, err error) {
+func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 	filePath, err = p.envParams.GetPath("SSH_KNOWN_HOSTS", libparams.Default("./known_hosts"))
 	if err != nil {
 		return "", err
@@ -31,7 +31,7 @@ func (p *paramsGetter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 
 // GetSSHKeyFilepath obtains the file path of the SSH private key,
 // from the environment variable SSH_KEY and defaults to /key
-func (p *paramsGetter) GetSSHKeyFilepath() (filePath string, err error) {
+func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
 	filePath, err = p.envParams.GetPath("SSH_KEY", libparams.Default("./key"))
 	if err != nil {
 		return "", err
@@ -49,7 +49,7 @@ func (p *paramsGetter) GetSSHKeyFilepath() (filePath string, err error) {
 // from the environment variable SSH_KEY_PASSPHRASE and defaults to returning an
 // empty string passphrase if no file is provided.
 // It uses files instead of environment variables for security reasons.
-func (p *paramsGetter) GetSSHKeyPassphrase() (passphrase string, err error) {
+func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
 	filePath, err := p.envParams.GetPath("SSH_KEY_PASSPHRASE")
 	if err != nil {
 		return "", err
@@ -70,13 +70,13 @@ func (p *paramsGetter) GetSSHKeyPassphrase() (passphrase string, err error) {
 
 // GetGitURL obtains the Git repository URL to interact with,
 // from the environment variable GIT_URL.
-func (p *paramsGetter) GetGitURL() (URL string, err error) {
-	URL, err = p.envParams.GetEnv("GIT_URL", libparams.Compulsory())
+func (p *getter) GetGitURL() (url string, err error) {
+	url, err = p.envParams.GetEnv("GIT_URL", libparams.Compulsory())
 	if err != nil {
 		return "", err
 	}
-	if !regexp.MustCompile(`((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?`).MatchString(URL) {
-		return "", fmt.Errorf("environment variable GIT_URL value %q is not valid", URL)
+	if !regexp.MustCompile(`((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?`).MatchString(url) {
+		return "", fmt.Errorf("environment variable GIT_URL value %q is not valid", url)
 	}
-	return URL, nil
+	return url, nil
 }

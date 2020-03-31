@@ -1,7 +1,7 @@
 package dnscrypto
 
 import (
-	"crypto/md5"
+	"crypto/md5" /* #nosec */
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -18,7 +18,7 @@ func (d *dnsCrypto) GetNamedRoot() (namedRoot []byte, err error) {
 	} else if status != http.StatusOK {
 		return nil, fmt.Errorf("HTTP status is %d", status)
 	}
-	sum := md5.Sum(namedRoot)
+	sum := md5.Sum(namedRoot) /* #nosec */
 	hexSum := hex.EncodeToString(sum[:])
 	if hexSum != d.namedRootHexMD5 {
 		return nil, fmt.Errorf("named root MD5 sum %q is not expected sum %q", hexSum, d.namedRootHexMD5)
