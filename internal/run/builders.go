@@ -51,8 +51,8 @@ func (r *runner) buildAds() error {
 	return r.buildBlockLists(
 		r.hostnamesBuilder.BuildAds,
 		nil,
-		constants.MaliciousHostnamesFilename,
-		constants.MaliciousIPsFilename,
+		constants.AdsHostnamesFilename,
+		constants.AdsIPsFilename,
 	)
 }
 
