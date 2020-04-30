@@ -10,6 +10,7 @@ import (
 	"github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/signals"
 	"github.com/qdm12/updated/internal/env"
@@ -66,7 +67,7 @@ func main() {
 	}
 	logger.Info(allSettings.String())
 	go signals.WaitForExit(e.ShutdownFromSignal)
-	errs := network.NewConnectivity(HTTPTimeout).Checks("github.com")
+	errs := connectivity.NewConnectivity(HTTPTimeout).Checks("github.com")
 	for _, err := range errs {
 		e.Warn(err)
 	}
