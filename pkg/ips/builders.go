@@ -10,16 +10,16 @@ func (b *builder) BuildMalicious() (ips []string, err error) {
 				return line != "0.0.0.0/8"
 			},
 		},
-		sourceType{
-			url: "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt",
-			customPreCleanLine: func(line string) string {
-				found := b.verifier.SearchIPv4(line)
-				if len(found) == 0 {
-					return ""
-				}
-				return found[0]
-			},
-		},
+		// sourceType{
+		// 	url: "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt",
+		// 	customPreCleanLine: func(line string) string {
+		// 		found := b.verifier.SearchIPv4(line)
+		// 		if len(found) == 0 {
+		// 			return ""
+		// 		}
+		// 		return found[0]
+		// 	},
+		// },
 	}
 	return b.buildForSources("malicious", sources)
 }
