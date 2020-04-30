@@ -76,9 +76,12 @@ func (b *builder) buildForSource(
 	return ips, nil
 }
 
-func netIPIsPrivate(netIP net.IP) bool {
+func netIPIsPrivate(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return true
+	}
 	privateCIDRBlocks := [8]string{
-		"127.0.0.1/8",    // localhost
+		"127.0.0.0/8",    // localhost
 		"10.0.0.0/8",     // 24-bit block
 		"172.16.0.0/12",  // 20-bit block
 		"192.168.0.0/16", // 16-bit block
@@ -89,7 +92,7 @@ func netIPIsPrivate(netIP net.IP) bool {
 	}
 	for i := range privateCIDRBlocks {
 		_, CIDR, _ := net.ParseCIDR(privateCIDRBlocks[i])
-		if CIDR.Contains(netIP) {
+		if CIDR.Contains(ip) {
 			return true
 		}
 	}
