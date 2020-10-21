@@ -12,15 +12,6 @@ func (b *builder) BuildSurveillance() (hostnames []string, err error) {
 		sourceType{
 			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)",
 		},
-		sourceType{
-			url: "https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS/HOSTS",
-			customPreCleanLine: func(line string) string {
-				return strings.TrimPrefix(line, "0.0.0.0 ")
-			},
-			customIsLineValid: func(line string) bool {
-				return !strings.HasPrefix(line, "127.0.0.1 ")
-			},
-		},
 	}
 	return b.buildForSources("surveillance", sources)
 }
