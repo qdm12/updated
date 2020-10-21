@@ -1,10 +1,11 @@
 package hostnames
 
 import (
+	"context"
 	"strings"
 )
 
-func (b *builder) BuildSurveillance() (hostnames []string, err error) {
+func (b *builder) BuildSurveillance(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
 			url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa",
@@ -13,10 +14,10 @@ func (b *builder) BuildSurveillance() (hostnames []string, err error) {
 			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)", //nolint:lll
 		},
 	}
-	return b.buildForSources("surveillance", sources)
+	return b.buildForSources(ctx, "surveillance", sources)
 }
 
-func (b *builder) BuildMalicious() (hostnames []string, err error) {
+func (b *builder) BuildMalicious(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
 			url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -50,10 +51,10 @@ func (b *builder) BuildMalicious() (hostnames []string, err error) {
 			},
 		},
 	}
-	return b.buildForSources("malicious", sources)
+	return b.buildForSources(ctx, "malicious", sources)
 }
 
-func (b *builder) BuildAds() (hostnames []string, err error) {
+func (b *builder) BuildAds(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
 			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt",
@@ -77,5 +78,5 @@ func (b *builder) BuildAds() (hostnames []string, err error) {
 			},
 		},
 	}
-	return b.buildForSources("ads", sources)
+	return b.buildForSources(ctx, "ads", sources)
 }

@@ -1,6 +1,7 @@
 package dnscrypto
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/xml"
@@ -30,8 +31,8 @@ type TrustAnchor struct {
 }
 
 // GetRootAnchorsXML fetches the root anchors XML file online and parses it.
-func (d *dnsCrypto) GetRootAnchorsXML() (rootAnchorsXML []byte, err error) {
-	rootAnchorsXML, status, err := d.client.GetContent(constants.RootAnchorsURL, network.UseRandomUserAgent())
+func (d *dnsCrypto) GetRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error) {
+	rootAnchorsXML, status, err := d.client.Get(ctx, constants.RootAnchorsURL, network.UseRandomUserAgent())
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {

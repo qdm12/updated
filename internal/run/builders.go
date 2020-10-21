@@ -1,14 +1,16 @@
 package run
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/qdm12/updated/internal/constants"
 )
 
-func (r *runner) buildBlockLists(buildHostnames, buildIps func() ([]string, error),
+func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
+	buildIps func(ctx context.Context) ([]string, error),
 	hostnamesFilename, ipsFilename string) error {
-	hostnames, err := buildHostnames()
+	hostnames, err := buildHostnames(ctx)
 	if err != nil {
 		return err
 	}
@@ -22,7 +24,7 @@ func (r *runner) buildBlockLists(buildHostnames, buildIps func() ([]string, erro
 		IPs = append(IPs, r.ipsBuilder.BuildIPsFromHostnames(hostnames)...)
 	}
 	if buildIps != nil {
-		newIPs, err := buildIps()
+		newIPs, err := buildIps(ctx)
 		if err != nil {
 			return err
 		}
@@ -38,8 +40,8 @@ func (r *runner) buildBlockLists(buildHostnames, buildIps func() ([]string, erro
 		IPs)
 }
 
-func (r *runner) buildMalicious() error {
-	return r.buildBlockLists(
+func (r *runner) buildMalicious(ctx context.Context) error {
+	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildMalicious,
 		r.ipsBuilder.BuildMalicious,
 		constants.MaliciousHostnamesFilename,
@@ -47,8 +49,8 @@ func (r *runner) buildMalicious() error {
 	)
 }
 
-func (r *runner) buildAds() error {
-	return r.buildBlockLists(
+func (r *runner) buildAds(ctx context.Context) error {
+	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildAds,
 		nil,
 		constants.AdsHostnamesFilename,
@@ -56,8 +58,8 @@ func (r *runner) buildAds() error {
 	)
 }
 
-func (r *runner) buildSurveillance() error {
-	return r.buildBlockLists(
+func (r *runner) buildSurveillance(ctx context.Context) error {
+	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildSurveillance,
 		nil,
 		constants.SurveillanceHostnamesFilename,

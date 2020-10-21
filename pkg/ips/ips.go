@@ -1,6 +1,7 @@
 package ips
 
 import (
+	"context"
 	"net"
 
 	"github.com/qdm12/golibs/logging"
@@ -9,7 +10,7 @@ import (
 )
 
 type Builder interface {
-	BuildMalicious() (IPs []string, err error)
+	BuildMalicious(ctx context.Context) (IPs []string, err error)
 	BuildIPsFromHostnames(hostnames []string) (IPs []string)
 	CleanIPs(IPs []string) (cleanIPs []string, removedCount int, warnings []string)
 }

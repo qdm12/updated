@@ -1,6 +1,7 @@
 package ips
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -17,11 +18,11 @@ type sourceType struct {
 	customPostCleanLine func(line string) string
 }
 
-func (b *builder) buildForSources(title string, sources []sourceType) (ips []string, err error) {
+func (b *builder) buildForSources(ctx context.Context, title string, sources []sourceType) (ips []string, err error) {
 	b.logger.Info("building %s IPs...", title)
 	for _, source := range sources {
 		newIPs, err := b.buildForSource(
-			source.url,
+			ctx, source.url,
 			source.customPreCleanLine,
 			source.customIsLineValid,
 			source.customPostCleanLine,
@@ -36,14 +37,14 @@ func (b *builder) buildForSources(title string, sources []sourceType) (ips []str
 }
 
 func (b *builder) buildForSource(
-	url string,
+	ctx context.Context, url string,
 	customPreCleanLine func(line string) string,
 	customIsLineValid func(line string) bool,
 	customPostCleanLine func(line string) string,
 ) (ips []string, err error) {
 	tStart := time.Now()
 	b.logger.Debug("building IPs %s...", url)
-	content, status, err := b.client.GetContent(url, network.UseRandomUserAgent())
+	content, status, err := b.client.Get(ctx, url, network.UseRandomUserAgent())
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {

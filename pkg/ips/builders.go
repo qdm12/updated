@@ -1,8 +1,10 @@
 package ips
 
+import "context"
+
 // BuildMalicious obtains lists of IP addresses from different web sources
 // and returns a list of CIDR IP ranges of malicious IP addresses.
-func (b *builder) BuildMalicious() (ips []string, err error) {
+func (b *builder) BuildMalicious(ctx context.Context) (ips []string, err error) {
 	sources := []sourceType{
 		{
 			url: "https://iplists.firehol.org/files/firehol_level1.netset",
@@ -21,7 +23,7 @@ func (b *builder) BuildMalicious() (ips []string, err error) {
 		// 	},
 		// },
 	}
-	return b.buildForSources("malicious", sources)
+	return b.buildForSources(ctx, "malicious", sources)
 }
 
 // BuildIPsFromHostnames builds a list of IP addresses obtained by resolving

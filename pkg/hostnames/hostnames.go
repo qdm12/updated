@@ -1,15 +1,17 @@
 package hostnames
 
 import (
+	"context"
+
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
 type Builder interface {
-	BuildSurveillance() (hostnames []string, err error)
-	BuildMalicious() (hostnames []string, err error)
-	BuildAds() (hostnames []string, err error)
+	BuildSurveillance(ctx context.Context) (hostnames []string, err error)
+	BuildMalicious(ctx context.Context) (hostnames []string, err error)
+	BuildAds(ctx context.Context) (hostnames []string, err error)
 }
 
 type builder struct {

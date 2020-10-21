@@ -1,6 +1,7 @@
 package hostnames
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sort"
@@ -15,14 +16,15 @@ type sourceType struct {
 	customPostCleanLine func(line string) string
 }
 
-func (b *builder) buildForSources(title string, sources []sourceType) (hostnames []string, err error) {
+func (b *builder) buildForSources(ctx context.Context, title string,
+	sources []sourceType) (hostnames []string, err error) {
 	b.logger.Debug("building %s hostnames...", title)
 	uniqueHostnames := make(map[string]bool)
 	var newHostnames []string
 	var totalHostnames int
 	for _, source := range sources {
 		newHostnames, err = b.buildForSource(
-			source.url,
+			ctx, source.url,
 			source.customPreCleanLine,
 			source.customIsLineValid,
 			source.customPostCleanLine,
@@ -49,14 +51,14 @@ func (b *builder) buildForSources(title string, sources []sourceType) (hostnames
 }
 
 func (b *builder) buildForSource(
-	url string,
+	ctx context.Context, url string,
 	customPreCleanLine func(line string) string,
 	customIsLineValid func(line string) bool,
 	customPostCleanLine func(line string) string,
 ) (hostnames []string, err error) {
 	tStart := time.Now()
 	b.logger.Debug("building hostnames %s...", url)
-	content, status, err := b.client.GetContent(url)
+	content, status, err := b.client.Get(ctx, url)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {

@@ -1,14 +1,15 @@
 package run
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/qdm12/updated/internal/constants"
 )
 
-func (r *runner) buildNamedRoot() error {
+func (r *runner) buildNamedRoot(ctx context.Context) error {
 	// Build named root from internic.net
-	namedRoot, err := r.dnscrypto.GetNamedRoot()
+	namedRoot, err := r.dnscrypto.GetNamedRoot(ctx)
 	if err != nil {
 		return err
 	}
@@ -17,9 +18,9 @@ func (r *runner) buildNamedRoot() error {
 		namedRoot)
 }
 
-func (r *runner) buildRootAnchorsAndKeys() error {
+func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	// Build root anchors XML from data.iana.org
-	rootAnchorsXML, err := r.dnscrypto.GetRootAnchorsXML()
+	rootAnchorsXML, err := r.dnscrypto.GetRootAnchorsXML(ctx)
 	if err != nil {
 		return err
 	}

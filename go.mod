@@ -1,11 +1,11 @@
 module github.com/qdm12/updated
 
-go 1.14
+go 1.15
 
 require (
-	github.com/qdm12/golibs v0.0.0-20200430173218-57de728e2151
-	github.com/stretchr/testify v1.5.1
-	github.com/yl2chen/cidranger v1.0.0
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+	github.com/qdm12/golibs v0.0.0-20201018204514-1d5986880422
+	github.com/stretchr/testify v1.6.1
+	github.com/yl2chen/cidranger v1.0.2
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )

@@ -1,7 +1,9 @@
 package dnscrypto
 
+//nolint:gci
 import (
-	"crypto/md5" //nolint:gosec,gci
+	"context"
+	"crypto/md5" //nolint:gosec
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -11,8 +13,8 @@ import (
 )
 
 // GetNamedRoot downloads the named.root and returns it.
-func (d *dnsCrypto) GetNamedRoot() (namedRoot []byte, err error) {
-	namedRoot, status, err := d.client.GetContent(constants.NamedRootURL, network.UseRandomUserAgent())
+func (d *dnsCrypto) GetNamedRoot(ctx context.Context) (namedRoot []byte, err error) {
+	namedRoot, status, err := d.client.Get(ctx, constants.NamedRootURL, network.UseRandomUserAgent())
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {

@@ -1,10 +1,14 @@
 package dnscrypto
 
-import "github.com/qdm12/golibs/network"
+import (
+	"context"
+
+	"github.com/qdm12/golibs/network"
+)
 
 type DNSCrypto interface {
-	GetNamedRoot() (namedRoot []byte, err error)
-	GetRootAnchorsXML() (rootAnchorsXML []byte, err error)
+	GetNamedRoot(ctx context.Context) (namedRoot []byte, err error)
+	GetRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error)
 	ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error)
 }
 

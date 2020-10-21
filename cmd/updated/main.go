@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/qdm12/golibs/admin"
@@ -12,7 +15,6 @@ import (
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
-	"github.com/qdm12/golibs/signals"
 	"github.com/qdm12/updated/internal/env"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
@@ -20,22 +22,24 @@ import (
 )
 
 func main() {
-	logger, err := logging.NewLogger(logging.ConsoleEncoding, logging.InfoLevel, -1)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	logger, err := logging.NewLogger(logging.ConsoleEncoding, logging.InfoLevel)
 	if err != nil {
 		panic(err)
 	}
 	envParams := libparams.NewEnvParams()
-	encoding, level, nodeID, err := envParams.GetLoggerConfig()
+	encoding, level, err := envParams.GetLoggerConfig()
 	if err != nil {
 		logger.Error(err)
 	} else {
-		logger, err = logging.NewLogger(encoding, level, nodeID)
+		logger, err = logging.NewLogger(encoding, level)
 		if err != nil {
 			panic(err)
 		}
 	}
 	if healthcheck.Mode(os.Args) {
-		if err := healthcheck.Query(); err != nil {
+		if err := healthcheck.Query(ctx); err != nil {
 			logger.Error(err)
 			os.Exit(1)
 		}
@@ -66,19 +70,37 @@ func main() {
 		return
 	}
 	logger.Info(allSettings.String())
-	go signals.WaitForExit(e.ShutdownFromSignal)
-	errs := connectivity.NewConnectivity(HTTPTimeout).Checks("github.com")
+	errs := connectivity.NewConnectivity(HTTPTimeout).Checks(ctx, "github.com")
 	for _, err := range errs {
 		e.Warn(err)
 	}
 	runner := run.NewRunner(allSettings, client, logger)
 	e.Notify(1, "Program started")
-	for {
-		go func() {
-			err := runner.Run()
-			e.CheckError(err)
-		}()
-		time.Sleep(allSettings.Period)
+	go func() {
+		ticker := time.NewTicker(allSettings.Period)
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				err := runner.Run(ctx)
+				e.CheckError(err)
+			}
+		}
+	}()
+	signalsCh := make(chan os.Signal, 1)
+	signal.Notify(signalsCh,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		os.Interrupt,
+	)
+	select {
+	case <-ctx.Done():
+		logger.Warn("context canceled, shutting down")
+	case signal := <-signalsCh:
+		logger.Warn("Caught OS signal %s, shutting down", signal)
+		cancel()
 	}
 }
 

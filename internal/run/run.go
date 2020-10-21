@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -16,7 +17,7 @@ import (
 )
 
 type Runner interface {
-	Run() error
+	Run(ctx context.Context) error
 }
 
 type runner struct {
@@ -41,7 +42,7 @@ func NewRunner(settings settings.Settings, client network.Client, logger logging
 	}
 }
 
-func (r *runner) Run() (err error) {
+func (r *runner) Run(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
 		executionTime := time.Since(tStart)
@@ -67,19 +68,19 @@ func (r *runner) Run() (err error) {
 	}
 	chError := make(chan error)
 	go func() {
-		chError <- r.buildNamedRoot()
+		chError <- r.buildNamedRoot(ctx)
 	}()
 	go func() {
-		chError <- r.buildRootAnchorsAndKeys()
+		chError <- r.buildRootAnchorsAndKeys(ctx)
 	}()
 	go func() {
-		chError <- r.buildMalicious()
+		chError <- r.buildMalicious(ctx)
 	}()
 	go func() {
-		chError <- r.buildAds()
+		chError <- r.buildAds(ctx)
 	}()
 	go func() {
-		chError <- r.buildSurveillance()
+		chError <- r.buildSurveillance(ctx)
 	}()
 	var errorMessages []string
 	for N := 0; N < 5; N++ {
