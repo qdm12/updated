@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
@@ -17,12 +19,13 @@ import (
 )
 
 type Runner interface {
-	Run(ctx context.Context) error
+	Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration)
 }
 
 type runner struct {
 	settings         settings.Settings
 	logger           logging.Logger
+	gotify           admin.Gotify
 	client           network.Client
 	fileManager      files.FileManager
 	ipsBuilder       ips.Builder
@@ -30,10 +33,12 @@ type runner struct {
 	dnscrypto        dnscrypto.DNSCrypto
 }
 
-func NewRunner(settings settings.Settings, client network.Client, logger logging.Logger) Runner {
+func New(settings settings.Settings, client network.Client,
+	logger logging.Logger, gotify admin.Gotify) Runner {
 	return &runner{
 		settings:         settings,
 		logger:           logger,
+		gotify:           gotify,
 		client:           client,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
@@ -42,7 +47,26 @@ func NewRunner(settings settings.Settings, client network.Client, logger logging
 	}
 }
 
-func (r *runner) Run(ctx context.Context) (err error) {
+func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration) {
+	defer wg.Done()
+	ticker := time.NewTicker(period)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := r.singleRun(ctx); err != nil {
+				r.logger.Error(err)
+				if err := r.gotify.Notify(err.Error(), 3); err != nil {
+					r.logger.Error(err)
+				}
+			}
+		}
+	}
+}
+
+func (r *runner) singleRun(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
 		executionTime := time.Since(tStart)
