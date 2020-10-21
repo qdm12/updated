@@ -1,10 +1,10 @@
 package ips
 
 // BuildMalicious obtains lists of IP addresses from different web sources
-// and returns a list of CIDR IP ranges of malicious IP addresses
+// and returns a list of CIDR IP ranges of malicious IP addresses.
 func (b *builder) BuildMalicious() (ips []string, err error) {
 	sources := []sourceType{
-		sourceType{
+		{
 			url: "https://iplists.firehol.org/files/firehol_level1.netset",
 			customIsLineValid: func(line string) bool {
 				return line != "0.0.0.0/8"

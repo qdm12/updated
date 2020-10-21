@@ -6,11 +6,11 @@ import (
 
 func (b *builder) BuildSurveillance() (hostnames []string, err error) {
 	sources := []sourceType{
-		sourceType{
+		{
 			url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa",
 		},
-		sourceType{
-			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)",
+		{
+			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)", //nolint:lll
 		},
 	}
 	return b.buildForSources("surveillance", sources)
@@ -18,7 +18,7 @@ func (b *builder) BuildSurveillance() (hostnames []string, err error) {
 
 func (b *builder) BuildMalicious() (hostnames []string, err error) {
 	sources := []sourceType{
-		sourceType{
+		{
 			url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
 			customPreCleanLine: func(line string) string {
 				line = strings.TrimPrefix(line, "0.0.0.0 ")
@@ -38,7 +38,7 @@ func (b *builder) BuildMalicious() (hostnames []string, err error) {
 					strings.HasPrefix(line, "ff02::3"))
 			},
 		},
-		sourceType{
+		{
 			url: "https://raw.githubusercontent.com/k0nsl/unbound-blocklist/master/blocks.conf",
 			customPreCleanLine: func(line string) string {
 				line = strings.TrimPrefix(line, "local-zone: \"")
@@ -55,7 +55,7 @@ func (b *builder) BuildMalicious() (hostnames []string, err error) {
 
 func (b *builder) BuildAds() (hostnames []string, err error) {
 	sources := []sourceType{
-		sourceType{
+		{
 			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt",
 			customIsLineValid: func(line string) bool {
 				return !strings.HasSuffix(line, "/::")
@@ -66,7 +66,7 @@ func (b *builder) BuildAds() (hostnames []string, err error) {
 				return strings.TrimSuffix(line, ".")
 			},
 		},
-		sourceType{
+		{
 			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/hostnames.txt",
 			customIsLineValid: func(line string) bool {
 				return !strings.HasPrefix(line, ":: ")

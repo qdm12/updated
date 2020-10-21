@@ -7,7 +7,7 @@ import (
 	"github.com/yl2chen/cidranger"
 )
 
-// CleanIPs removes duplicates IPs and CIDRs, and IPs contained in CIDRs
+// CleanIPs removes duplicates IPs and CIDRs, and IPs contained in CIDRs.
 func (b *builder) CleanIPs(ips []string) (cleanIPs []string, removedCount int, warnings []string) {
 	uniqueIPs := makeUniqueIPs(ips)
 	uniqueCIDRs := makeUniqueCIDRs(ips)

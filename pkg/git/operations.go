@@ -9,7 +9,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-// Branch creates a new branch from the current head
+// Branch creates a new branch from the current head.
 func (c *client) Branch(branchName string) error {
 	headRef, err := c.repo.Head()
 	if err != nil {
@@ -21,7 +21,7 @@ func (c *client) Branch(branchName string) error {
 	return err
 }
 
-// CheckoutBranch force checkout to an existing branch
+// CheckoutBranch force checkout to an existing branch.
 func (c *client) CheckoutBranch(branchName string) error {
 	workTree, err := c.repo.Worktree()
 	if err != nil {

@@ -43,7 +43,7 @@ func NewGetter(envParams libparams.EnvParams) Getter {
 }
 
 // GetOutputDir obtains the output directory path to write files to
-// from the environment variable OUTPUT_DIR and defaults to ./files
+// from the environment variable OUTPUT_DIR and defaults to ./files.
 func (p *getter) GetOutputDir() (path string, err error) {
 	return p.envParams.GetPath("OUTPUT_DIR", libparams.Default("./files"))
 }

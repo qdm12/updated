@@ -30,7 +30,7 @@ type env struct {
 	gotify admin.Gotify
 }
 
-// NewEnv creates a new Env object
+// NewEnv creates a new Env object.
 func NewEnv(logger logging.Logger) Env {
 	return &env{logger: logger}
 }
@@ -62,7 +62,8 @@ func (e *env) Info(args ...interface{}) {
 // Warn logs a message and sends a notification to the Gotify server.
 func (e *env) Warn(args ...interface{}) {
 	e.logger.Warn(args...)
-	e.Notify(2, args...)
+	const warnLevel = 2
+	e.Notify(warnLevel, args...)
 }
 
 // CheckError logs an error and sends a notification to the Gotify server
@@ -70,7 +71,8 @@ func (e *env) Warn(args ...interface{}) {
 func (e *env) CheckError(err error) {
 	if err != nil {
 		e.logger.Error(err)
-		e.Notify(3, err)
+		const errorLevel = 3
+		e.Notify(errorLevel, err)
 	}
 }
 
@@ -108,7 +110,8 @@ func (e *env) ShutdownFromSignal(signal string) (exitCode int) {
 // It exits the program with an exit code of 1.
 func (e *env) Fatal(args ...interface{}) {
 	e.logger.Error(args...)
-	e.Notify(4, args...)
+	const fatalLevel = 4
+	e.Notify(fatalLevel, args...)
 	e.Shutdown()
 	os.Exit(1)
 }

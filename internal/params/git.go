@@ -30,7 +30,7 @@ func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 }
 
 // GetSSHKeyFilepath obtains the file path of the SSH private key,
-// from the environment variable SSH_KEY and defaults to /key
+// from the environment variable SSH_KEY and defaults to ./key.
 func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
 	filePath, err = p.envParams.GetPath("SSH_KEY", libparams.Default("./key"))
 	if err != nil {

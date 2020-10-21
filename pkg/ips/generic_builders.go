@@ -52,7 +52,7 @@ func (b *builder) buildForSource(
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
 		line = preCleanLine(line, customPreCleanLine)
-		if isLineValid(line, customIsLineValid) {
+		if isLineValid(line, customIsLineValid) { //nolint:nestif
 			line = postCleanLine(line, customPostCleanLine)
 			// check for single IP
 			if IP := net.ParseIP(line); IP != nil {

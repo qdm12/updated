@@ -8,7 +8,6 @@ import (
 	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
-
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
 	"github.com/qdm12/updated/pkg/git"

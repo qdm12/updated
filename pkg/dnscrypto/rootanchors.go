@@ -12,7 +12,7 @@ import (
 	"github.com/qdm12/updated/pkg/constants"
 )
 
-// TrustAnchor holds the XML data of the root anchors
+// TrustAnchor holds the XML data of the root anchors.
 type TrustAnchor struct {
 	XMLName   xml.Name `xml:"TrustAnchor"`
 	ID        string   `xml:"id,attr"`
@@ -29,7 +29,7 @@ type TrustAnchor struct {
 	} `xml:"KeyDigest"`
 }
 
-// GetRootAnchorsXML fetches the root anchors XML file online and parses it
+// GetRootAnchorsXML fetches the root anchors XML file online and parses it.
 func (d *dnsCrypto) GetRootAnchorsXML() (rootAnchorsXML []byte, err error) {
 	rootAnchorsXML, status, err := d.client.GetContent(constants.RootAnchorsURL, network.UseRandomUserAgent())
 	if err != nil {
@@ -45,7 +45,8 @@ func (d *dnsCrypto) GetRootAnchorsXML() (rootAnchorsXML []byte, err error) {
 	return rootAnchorsXML, err
 }
 
-// ConvertRootAnchorsToRootKeys converts root anchors XML data to a list of DNS root keys
+// ConvertRootAnchorsToRootKeys converts root anchors XML data to a list
+// of DNS root keys.
 func (d *dnsCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error) {
 	var trustAnchor TrustAnchor
 	if err := xml.Unmarshal(rootAnchorsXML, &trustAnchor); err != nil {
