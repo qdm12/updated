@@ -122,7 +122,10 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 	}
 	if gitClient != nil {
 		message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
-		return gitClient.UploadAllChanges(message)
+		if err := gitClient.UploadAllChanges(message); err != nil {
+			return err
+		}
+		r.logger.Info("Committed to Git: %s", message)
 	}
 	return nil
 }
