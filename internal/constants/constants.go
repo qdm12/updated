@@ -1,6 +1,10 @@
 package constants
 
 const (
+	ProgramName = "Updated"
+)
+
+const (
 	NamedRootFilename             = "named.root.updated"
 	RootAnchorsFilename           = "root-anchors.xml.updated"
 	RootKeyFilename               = "root.key.updated"

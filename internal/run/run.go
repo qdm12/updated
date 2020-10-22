@@ -11,6 +11,7 @@ import (
 	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
+	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
 	"github.com/qdm12/updated/pkg/git"
@@ -51,22 +52,19 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	defer wg.Done()
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
-	r.singleRunWrapper(ctx)
+	if err := r.singleRun(ctx); err != nil {
+		r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
+			r.logger, err.Error())
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			r.singleRunWrapper(ctx)
-		}
-	}
-}
-
-func (r *runner) singleRunWrapper(ctx context.Context) {
-	if err := r.singleRun(ctx); err != nil {
-		r.logger.Error(err)
-		if err := r.gotify.Notify(err.Error(), 3); err != nil {
-			r.logger.Error(err)
+			if err := r.singleRun(ctx); err != nil {
+				r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
+					r.logger, err.Error())
+			}
 		}
 	}
 }

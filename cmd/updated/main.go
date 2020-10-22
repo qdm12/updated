@@ -16,6 +16,7 @@ import (
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
+	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
 	"github.com/qdm12/updated/internal/settings"
@@ -84,7 +85,7 @@ func _main(ctx context.Context) (exitCode int) {
 	}()
 	runner := run.New(allSettings, client, logger, gotify)
 	// TODO context and in its own goroutine
-	gotify.NotifyAndLog("Program started", logging.InfoLevel, logger)
+	gotify.NotifyAndLog(constants.ProgramName, logging.InfoLevel, logger, "Program started")
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)
 	signalsCh := make(chan os.Signal, 1)
