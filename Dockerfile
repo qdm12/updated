@@ -56,8 +56,7 @@ ENV \
     NAMED_ROOT_MD5=3c7b65c0727f92a3af9b8572b027f324 \
     ROOT_ANCHORS_SHA256=45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770 \
     GOTIFY_URL= \
-    GOTIFY_TOKEN= \
-    NODE_ID=0
+    GOTIFY_TOKEN=
 ENTRYPOINT ["/updated"]
 #HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updated","healthcheck"]
 USER 1000

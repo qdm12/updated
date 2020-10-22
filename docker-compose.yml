@@ -22,7 +22,6 @@ services:
       - SSH_KNOWN_HOSTS=./known_hosts
       - GOTIFY_URL=
       - GOTIFY_TOKEN=
-      - NODE_ID=0
     volumes:
       - ./key:/key:ro
       - ./passphrase:/passphrase:ro

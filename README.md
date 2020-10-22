@@ -92,7 +92,6 @@ This Go program only reads parameters from environment variables for ease of use
     | --- | --- | --- | --- |
     | `GOTIFY_URL` | | URL *string* | URL to Gotify server |
     | `GOTIFY_TOKEN` | | *string* | Token for Gotify server |
-    | `NODE_ID` | `0` | *integer* | Node ID for clusters |
 
 ### Using Go
 
