@@ -51,17 +51,22 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	defer wg.Done()
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
+	r.singleRunWrapper(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := r.singleRun(ctx); err != nil {
-				r.logger.Error(err)
-				if err := r.gotify.Notify(err.Error(), 3); err != nil {
-					r.logger.Error(err)
-				}
-			}
+			r.singleRunWrapper(ctx)
+		}
+	}
+}
+
+func (r *runner) singleRunWrapper(ctx context.Context) {
+	if err := r.singleRun(ctx); err != nil {
+		r.logger.Error(err)
+		if err := r.gotify.Notify(err.Error(), 3); err != nil {
+			r.logger.Error(err)
 		}
 	}
 }
