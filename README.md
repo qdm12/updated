@@ -83,7 +83,7 @@ This Go program only reads parameters from environment variables for ease of use
 
     | Environment variable | Default | Possible values | Description |
     | --- | --- | --- | --- |
-    | `NAMED_ROOT_MD5` | `ef14b29649fd3976c6f8e5812b263480` | MD5 hexadecimal sum | Named root MD5 sum |
+    | `NAMED_ROOT_MD5` | `d37cc65f3a0882f4dca52e82bc3f96cd` | MD5 hexadecimal sum | Named root MD5 sum |
     | `ROOT_ANCHORS_SHA256` | `45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770` | SHA256 hexadecimal sum | Root anchors SHA256 sum |
 
 - Extras
