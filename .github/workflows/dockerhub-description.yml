@@ -17,8 +17,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v2.1.0
-        env:
-          DOCKERHUB_USERNAME: qmcgaw
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-          DOCKERHUB_REPOSITORY: qmcgaw/updated
+        uses: peter-evans/dockerhub-description@v2.4.1
+        with:
+          username: qmcgaw
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: qmcgaw/updated
+          short-description: Go program to update and push files periodically to a Git repository
+          readme-filepath: README.md
