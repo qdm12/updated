@@ -2,8 +2,7 @@ package dnscrypto
 
 import (
 	"context"
-
-	"github.com/qdm12/golibs/network"
+	"net/http"
 )
 
 type DNSCrypto interface {
@@ -13,12 +12,12 @@ type DNSCrypto interface {
 }
 
 type dnsCrypto struct {
-	client               network.Client
+	client               *http.Client
 	namedRootHexMD5      string
 	rootAnchorsHexSHA256 string
 }
 
-func NewDNSCrypto(client network.Client, namedRootHexMD5, rootAnchorsHexSHA256 string) DNSCrypto {
+func NewDNSCrypto(client *http.Client, namedRootHexMD5, rootAnchorsHexSHA256 string) DNSCrypto {
 	return &dnsCrypto{
 		client:               client,
 		namedRootHexMD5:      namedRootHexMD5,

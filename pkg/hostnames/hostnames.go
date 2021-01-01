@@ -2,9 +2,9 @@ package hostnames
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
@@ -15,15 +15,15 @@ type Builder interface {
 }
 
 type builder struct {
-	client   network.Client
+	client   *http.Client
 	logger   logging.Logger
 	verifier verification.Verifier
 }
 
-func NewBuilder(client network.Client, logger logging.Logger) Builder {
+func NewBuilder(client *http.Client, logger logging.Logger) Builder {
 	return &builder{
-		client,
-		logger,
-		verification.NewVerifier(),
+		client:   client,
+		logger:   logger,
+		verifier: verification.NewVerifier(),
 	}
 }

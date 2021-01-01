@@ -13,7 +13,6 @@ import (
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/updated/internal/constants"
@@ -60,7 +59,9 @@ func _main(ctx context.Context) (exitCode int) {
 		logger.Error(err)
 		return 1
 	}
-	client := network.NewClient(HTTPTimeout)
+	client := &http.Client{
+		Timeout: HTTPTimeout,
+	}
 	gotify, err := setupGotify(envParams)
 	if err != nil {
 		logger.Error(err)

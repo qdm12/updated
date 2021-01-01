@@ -2,7 +2,9 @@ package hostnames
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"strings"
@@ -50,6 +52,10 @@ func (b *builder) buildForSources(ctx context.Context, title string,
 	return sortedHostnames, nil
 }
 
+var (
+	ErrBadStatusCode = errors.New("bad HTTP status code")
+)
+
 func (b *builder) buildForSource(
 	ctx context.Context, url string,
 	customPreCleanLine func(line string) string,
@@ -58,12 +64,27 @@ func (b *builder) buildForSource(
 ) (hostnames []string, err error) {
 	tStart := time.Now()
 	b.logger.Debug("building hostnames %s...", url)
-	content, status, err := b.client.Get(ctx, url)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status for %q is %d", url, status)
 	}
+	response, err := b.client.Do(request)
+	if err != nil {
+		return nil, err
+	} else if response.StatusCode != http.StatusOK {
+		_ = response.Body.Close()
+		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
+	}
+
+	content, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return nil, err
+	}
+	if err := response.Body.Close(); err != nil {
+		return nil, err
+	}
+
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
 		line = preCleanLine(line, customPreCleanLine)

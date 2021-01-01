@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
@@ -27,20 +27,18 @@ type runner struct {
 	settings         settings.Settings
 	logger           logging.Logger
 	gotify           admin.Gotify
-	client           network.Client
 	fileManager      files.FileManager
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
 	dnscrypto        dnscrypto.DNSCrypto
 }
 
-func New(settings settings.Settings, client network.Client,
+func New(settings settings.Settings, client *http.Client,
 	logger logging.Logger, gotify admin.Gotify) Runner {
 	return &runner{
 		settings:         settings,
 		logger:           logger,
 		gotify:           gotify,
-		client:           client,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
 		dnscrypto:        dnscrypto.NewDNSCrypto(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
