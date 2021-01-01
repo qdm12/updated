@@ -1,10 +1,18 @@
 package params
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
 
 	libparams "github.com/qdm12/golibs/params"
+)
+
+var (
+	ErrSSHKnownHostFileDoesNotExist = errors.New("SSH known hosts file does not exist")
+	ErrSSHKeyFileDoesNotExist       = errors.New("SSH key file does not exist")
 )
 
 // GetGit obtains 'yes' or 'no' to do Git operations, from the environment
@@ -20,12 +28,18 @@ func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 	if err != nil {
 		return "", err
 	}
-	exists, err := p.fileManager.FileExists(filePath)
-	if err != nil {
+
+	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("%w: filepath %q", ErrSSHKnownHostFileDoesNotExist, filePath)
+	} else if err != nil {
 		return "", err
-	} else if !exists {
-		return "", fmt.Errorf("SSH known hosts file %q does not exist", filePath)
 	}
+
+	if err := file.Close(); err != nil {
+		return "", err
+	}
+
 	return filePath, nil
 }
 
@@ -36,12 +50,18 @@ func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
 	if err != nil {
 		return "", err
 	}
-	exists, err := p.fileManager.FileExists(filePath)
-	if err != nil {
+
+	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("%w: filepath %q", ErrSSHKnownHostFileDoesNotExist, filePath)
+	} else if err != nil {
 		return "", err
-	} else if !exists {
-		return "", fmt.Errorf("SSH key file %q does not exist", filePath)
 	}
+
+	if err := file.Close(); err != nil {
+		return "", err
+	}
+
 	return filePath, nil
 }
 
@@ -58,14 +78,24 @@ func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
 		// no passphrase
 		return "", nil
 	}
-	exists, err := p.fileManager.FileExists(filePath)
+
+	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("%w: filepath %q", ErrSSHKeyFileDoesNotExist, filePath)
+	} else if err != nil {
+		return "", err
+	}
+
+	b, err := ioutil.ReadAll(file)
 	if err != nil {
 		return "", err
-	} else if !exists {
-		return "", fmt.Errorf("SSH passphrase file %q does not exist", filePath)
 	}
-	data, err := p.fileManager.ReadFile(filePath)
-	return string(data), err
+
+	if err := file.Close(); err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
 
 // GetGitURL obtains the Git repository URL to interact with,

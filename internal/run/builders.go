@@ -2,7 +2,9 @@ package run
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/qdm12/updated/internal/constants"
 )
@@ -14,11 +16,23 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 	if err != nil {
 		return err
 	}
-	if err := r.fileManager.WriteLinesToFile(
-		filepath.Join(r.settings.OutputDir, hostnamesFilename),
-		hostnames); err != nil {
+
+	hostnamesFilepath := filepath.Join(r.settings.OutputDir, hostnamesFilename)
+	file, err := r.osOpenFile(hostnamesFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
 		return err
 	}
+
+	_, err = file.WriteString(strings.Join(hostnames, "\n"))
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
 	IPs := []string{}
 	if r.settings.ResolveHostnames {
 		IPs = append(IPs, r.ipsBuilder.BuildIPsFromHostnames(hostnames)...)
@@ -35,9 +49,24 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 		r.logger.Warn(warning)
 	}
 	r.logger.Info("Trimmed down %d IP address lines", removedCount)
-	return r.fileManager.WriteLinesToFile(
-		filepath.Join(r.settings.OutputDir, ipsFilename),
-		IPs)
+
+	ipsFilepath := filepath.Join(r.settings.OutputDir, ipsFilename)
+	file, err = r.osOpenFile(ipsFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(strings.Join(IPs, "\n"))
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *runner) buildMalicious(ctx context.Context) error {

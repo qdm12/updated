@@ -16,6 +16,7 @@ import (
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/updated/internal/constants"
+	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
 	"github.com/qdm12/updated/internal/settings"
@@ -23,10 +24,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	os.Exit(_main(ctx))
+	osOpenFile := os.OpenFile
+	os.Exit(_main(ctx, osOpenFile))
 }
 
-func _main(ctx context.Context) (exitCode int) {
+func _main(ctx context.Context, osOpenFile funcs.OSOpenFile) (exitCode int) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	envParams := libparams.NewEnvParams()
@@ -67,7 +69,7 @@ func _main(ctx context.Context) (exitCode int) {
 		logger.Error(err)
 		return 1
 	}
-	getter := params.NewGetter(envParams)
+	getter := params.NewGetter(envParams, osOpenFile)
 	allSettings, err := settings.Get(getter)
 	if err != nil {
 		logger.Error(err)
@@ -84,7 +86,7 @@ func _main(ctx context.Context) (exitCode int) {
 			logger.Warn(err)
 		}
 	}()
-	runner := run.New(allSettings, client, logger, gotify)
+	runner := run.New(allSettings, client, osOpenFile, logger, gotify)
 	// TODO context and in its own goroutine
 	gotify.NotifyAndLog(constants.ProgramName, logging.InfoLevel, logger, "Program started")
 	wg.Add(1)

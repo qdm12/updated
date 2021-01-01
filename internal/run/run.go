@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/qdm12/golibs/admin"
-	"github.com/qdm12/golibs/files"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/updated/internal/constants"
+	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
 	"github.com/qdm12/updated/pkg/git"
@@ -27,13 +27,13 @@ type runner struct {
 	settings         settings.Settings
 	logger           logging.Logger
 	gotify           admin.Gotify
-	fileManager      files.FileManager
+	osOpenFile       funcs.OSOpenFile
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
 	dnscrypto        dnscrypto.DNSCrypto
 }
 
-func New(settings settings.Settings, client *http.Client,
+func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpenFile,
 	logger logging.Logger, gotify admin.Gotify) Runner {
 	return &runner{
 		settings:         settings,
@@ -42,7 +42,7 @@ func New(settings settings.Settings, client *http.Client,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
 		dnscrypto:        dnscrypto.NewDNSCrypto(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
-		fileManager:      files.NewFileManager(),
+		osOpenFile:       osOpenFile,
 	}
 }
 

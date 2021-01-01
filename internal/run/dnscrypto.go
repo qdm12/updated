@@ -2,7 +2,9 @@ package run
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/qdm12/updated/internal/constants"
 )
@@ -13,9 +15,24 @@ func (r *runner) buildNamedRoot(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return r.fileManager.WriteToFile(
-		filepath.Join(r.settings.OutputDir, constants.NamedRootFilename),
-		namedRoot)
+
+	filepath := filepath.Join(r.settings.OutputDir, constants.NamedRootFilename)
+	file, err := r.osOpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(namedRoot)
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
@@ -28,12 +45,38 @@ func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := r.fileManager.WriteToFile(
-		filepath.Join(r.settings.OutputDir, constants.RootAnchorsFilename),
-		rootAnchorsXML); err != nil {
+
+	xmlFilepath := filepath.Join(r.settings.OutputDir, constants.RootAnchorsFilename)
+	file, err := r.osOpenFile(xmlFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
 		return err
 	}
-	return r.fileManager.WriteLinesToFile(
-		filepath.Join(r.settings.OutputDir, constants.RootKeyFilename),
-		rootKeys)
+
+	_, err = file.Write(rootAnchorsXML)
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	rootKeysFilepath := filepath.Join(r.settings.OutputDir, constants.RootKeyFilename)
+	file, err = r.osOpenFile(rootKeysFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(strings.Join(rootKeys, "\n"))
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	if err := file.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }

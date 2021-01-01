@@ -3,9 +3,9 @@ package params
 import (
 	"time"
 
-	"github.com/qdm12/golibs/files"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/verification"
+	"github.com/qdm12/updated/internal/funcs"
 )
 
 type Getter interface {
@@ -29,16 +29,16 @@ type Getter interface {
 }
 
 type getter struct {
-	envParams   libparams.EnvParams
-	verifier    verification.Verifier
-	fileManager files.FileManager
+	envParams  libparams.EnvParams
+	verifier   verification.Verifier
+	osOpenFile funcs.OSOpenFile
 }
 
-func NewGetter(envParams libparams.EnvParams) Getter {
+func NewGetter(envParams libparams.EnvParams, osOpenFile funcs.OSOpenFile) Getter {
 	return &getter{
-		envParams:   envParams,
-		verifier:    verification.NewVerifier(),
-		fileManager: files.NewFileManager(),
+		envParams:  envParams,
+		verifier:   verification.NewVerifier(),
+		osOpenFile: osOpenFile,
 	}
 }
 
