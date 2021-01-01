@@ -11,7 +11,7 @@ func (b *builder) BuildSurveillance(ctx context.Context) (hostnames []string, er
 			url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa",
 		},
 		{
-			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(including%20excessive%20GOV%20URLs)", //nolint:lll
+			url: "https://raw.githubusercontent.com/Cauchon/NSABlocklist-pi-hole-edition/master/HOSTS%20(excluding%20most%20GOV%20URLs)", //nolint:lll
 		},
 	}
 	return b.buildForSources(ctx, "surveillance", sources)
