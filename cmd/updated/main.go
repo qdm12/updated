@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/qdm12/golibs/admin"
-	"github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/funcs"
+	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
 	"github.com/qdm12/updated/internal/settings"
@@ -24,11 +24,24 @@ import (
 
 func main() {
 	ctx := context.Background()
+	args := os.Args
 	osOpenFile := os.OpenFile
-	os.Exit(_main(ctx, osOpenFile))
+	os.Exit(_main(ctx, args, osOpenFile))
 }
 
-func _main(ctx context.Context, osOpenFile funcs.OSOpenFile) (exitCode int) {
+func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exitCode int) {
+	if health.IsClientMode(args) {
+		// Running the program in a separate instance through the Docker
+		// built-in healthcheck, in an ephemeral fashion to query the
+		// long running instance of the program about its status
+		client := health.NewClient()
+		if err := client.Query(ctx); err != nil {
+			fmt.Println(err)
+			return 1
+		}
+		return 0
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	envParams := libparams.NewEnvParams()
@@ -42,13 +55,7 @@ func _main(ctx context.Context, osOpenFile funcs.OSOpenFile) (exitCode int) {
 		fmt.Println(err)
 		return 1
 	}
-	if healthcheck.Mode(os.Args) {
-		if err := healthcheck.Query(ctx); err != nil {
-			logger.Error(err)
-			return 1
-		}
-		return 0
-	}
+
 	fmt.Print(`
 #####################################
 ############## Updated ##############
@@ -86,11 +93,21 @@ func _main(ctx context.Context, osOpenFile funcs.OSOpenFile) (exitCode int) {
 			logger.Warn(err)
 		}
 	}()
-	runner := run.New(allSettings, client, osOpenFile, logger, gotify)
+
+	const healthServerAddr = "127.0.0.1:9999"
+	healthServer := health.NewServer(
+		healthServerAddr,
+		logger.WithPrefix("healthcheck server: "),
+	)
+	wg.Add(1)
+	go healthServer.Run(ctx, wg)
+
+	runner := run.New(allSettings, client, osOpenFile, logger, gotify, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
 	gotify.NotifyAndLog(constants.ProgramName, logging.InfoLevel, logger, "Program started")
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)
+
 	signalsCh := make(chan os.Signal, 1)
 	signal.Notify(signalsCh,
 		syscall.SIGINT,

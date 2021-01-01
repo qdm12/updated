@@ -31,10 +31,11 @@ type runner struct {
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
 	dnscrypto        dnscrypto.DNSCrypto
+	setHealthErr     func(err error)
 }
 
 func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpenFile,
-	logger logging.Logger, gotify admin.Gotify) Runner {
+	logger logging.Logger, gotify admin.Gotify, setHealthErr func(err error)) Runner {
 	return &runner{
 		settings:         settings,
 		logger:           logger,
@@ -43,6 +44,7 @@ func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpe
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
 		dnscrypto:        dnscrypto.NewDNSCrypto(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
 		osOpenFile:       osOpenFile,
+		setHealthErr:     setHealthErr,
 	}
 }
 
@@ -51,8 +53,11 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
 	if err := r.singleRun(ctx); err != nil {
+		r.setHealthErr(err)
 		r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
 			r.logger, err.Error())
+	} else {
+		r.setHealthErr(nil)
 	}
 	for {
 		select {
@@ -60,8 +65,11 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 			return
 		case <-ticker.C:
 			if err := r.singleRun(ctx); err != nil {
+				r.setHealthErr(err)
 				r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
 					r.logger, err.Error())
+			} else {
+				r.setHealthErr(nil)
 			}
 		}
 	}
