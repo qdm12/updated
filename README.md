@@ -20,7 +20,7 @@
     - Root keys to be used by Unbound
 - Optionally upload the changes to a Git repository using an SSH key
 - Based on the Scratch image with a total uncompressed size of 15.4MB
-- Compatible with amd64, x86 and ARM v6/v7/v8
+- Compatible with amd64 only although it is easily cross CPU compiled if needed
 
 ## Setup
 
@@ -83,8 +83,8 @@ This Go program only reads parameters from environment variables for ease of use
 
     | Environment variable | Default | Possible values | Description |
     | --- | --- | --- | --- |
-    | `NAMED_ROOT_MD5` | `d37cc65f3a0882f4dca52e82bc3f96cd` | MD5 hexadecimal sum | Named root MD5 sum |
-    | `ROOT_ANCHORS_SHA256` | `45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770` | SHA256 hexadecimal sum | Root anchors SHA256 sum |
+    | `NAMED_ROOT_MD5` | `d37cc65f3a0882f4dca52e82bc3f96cd` | MD5 hexadecimal sum or `""` | Named root MD5 sum. Disables checking if empty |
+    | `ROOT_ANCHORS_SHA256` | `45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770` | SHA256 hexadecimal sum or `""` | Root anchors SHA256 sum. Disables checking if empty |
 
 - Extras
 

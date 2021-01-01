@@ -35,6 +35,10 @@ func (d *dnsCrypto) GetRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byt
 		return nil, err
 	}
 
+	if d.rootAnchorsHexSHA256 == "" {
+		return rootAnchorsXML, nil
+	}
+
 	sum := sha256.Sum256(rootAnchorsXML)
 	hexSum := hex.EncodeToString(sum[:])
 	if hexSum != d.rootAnchorsHexSHA256 {

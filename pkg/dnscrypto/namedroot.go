@@ -35,6 +35,10 @@ func (d *dnsCrypto) GetNamedRoot(ctx context.Context) (namedRoot []byte, err err
 		return nil, err
 	}
 
+	if d.namedRootHexMD5 == "" {
+		return namedRoot, nil
+	}
+
 	sum := md5.Sum(namedRoot) //nolint:gosec
 	hexSum := hex.EncodeToString(sum[:])
 	if hexSum != d.namedRootHexMD5 {
