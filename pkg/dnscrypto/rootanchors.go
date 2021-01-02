@@ -35,14 +35,15 @@ func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 		return nil, err
 	}
 
-	if d.rootAnchorsHexSHA256 == "" {
+	checksum := d.getRootAnchorsHexSHA256()
+	if checksum == "" {
 		return rootAnchorsXML, nil
 	}
 
 	sum := sha256.Sum256(rootAnchorsXML)
 	hexSum := hex.EncodeToString(sum[:])
-	if hexSum != d.rootAnchorsHexSHA256 {
-		return nil, fmt.Errorf("%w: %q is not expected %q", ErrChecksumMismatch, hexSum, d.rootAnchorsHexSHA256)
+	if hexSum != checksum {
+		return nil, fmt.Errorf("%w: %q is not expected %q", ErrChecksumMismatch, hexSum, checksum)
 	}
 
 	return rootAnchorsXML, nil

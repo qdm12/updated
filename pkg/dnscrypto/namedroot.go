@@ -35,14 +35,15 @@ func (d *dnsCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, er
 		return nil, err
 	}
 
-	if d.namedRootHexMD5 == "" {
+	checksum := d.getNamedRootHexMD5()
+	if checksum == "" {
 		return namedRoot, nil
 	}
 
 	sum := md5.Sum(namedRoot) //nolint:gosec
 	hexSum := hex.EncodeToString(sum[:])
-	if hexSum != d.namedRootHexMD5 {
-		return nil, fmt.Errorf("%w: %q is not expected %q", ErrChecksumMismatch, hexSum, d.namedRootHexMD5)
+	if hexSum != checksum {
+		return nil, fmt.Errorf("%w: %q is not expected %q", ErrChecksumMismatch, hexSum, checksum)
 	}
 
 	return namedRoot, nil
