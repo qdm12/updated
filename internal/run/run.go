@@ -42,7 +42,7 @@ func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpe
 		gotify:           gotify,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
-		dnscrypto:        dnscrypto.NewDNSCrypto(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
+		dnscrypto:        dnscrypto.New(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
 		osOpenFile:       osOpenFile,
 		setHealthErr:     setHealthErr,
 	}

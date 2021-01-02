@@ -17,7 +17,7 @@ type dnsCrypto struct {
 	rootAnchorsHexSHA256 string
 }
 
-func NewDNSCrypto(client *http.Client, namedRootHexMD5, rootAnchorsHexSHA256 string) DNSCrypto {
+func New(client *http.Client, namedRootHexMD5, rootAnchorsHexSHA256 string) DNSCrypto {
 	return &dnsCrypto{
 		client:               client,
 		namedRootHexMD5:      namedRootHexMD5,
