@@ -13,8 +13,8 @@ import (
 	"github.com/qdm12/updated/pkg/constants"
 )
 
-// GetRootAnchorsXML fetches the root anchors XML file online and parses it.
-func (d *dnsCrypto) GetRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error) {
+// DownloadRootAnchorsXML fetches the root anchors XML file online and parses it.
+func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, constants.RootAnchorsURL, nil)
 	if err != nil {
 		return nil, err

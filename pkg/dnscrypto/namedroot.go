@@ -12,8 +12,8 @@ import (
 	"github.com/qdm12/updated/pkg/constants"
 )
 
-// GetNamedRoot downloads the named.root and returns it.
-func (d *dnsCrypto) GetNamedRoot(ctx context.Context) (namedRoot []byte, err error) {
+// DownloadNamedRoot downloads the named.root and returns it.
+func (d *dnsCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, err error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, constants.NamedRootURL, nil)
 	if err != nil {
 		return nil, err

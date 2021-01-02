@@ -11,7 +11,7 @@ import (
 
 func (r *runner) buildNamedRoot(ctx context.Context) error {
 	// Build named root from internic.net
-	namedRoot, err := r.dnscrypto.GetNamedRoot(ctx)
+	namedRoot, err := r.dnscrypto.DownloadNamedRoot(ctx)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (r *runner) buildNamedRoot(ctx context.Context) error {
 
 func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	// Build root anchors XML from data.iana.org
-	rootAnchorsXML, err := r.dnscrypto.GetRootAnchorsXML(ctx)
+	rootAnchorsXML, err := r.dnscrypto.DownloadRootAnchorsXML(ctx)
 	if err != nil {
 		return err
 	}

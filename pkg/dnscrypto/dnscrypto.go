@@ -6,8 +6,8 @@ import (
 )
 
 type DNSCrypto interface {
-	GetNamedRoot(ctx context.Context) (namedRoot []byte, err error)
-	GetRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error)
+	DownloadNamedRoot(ctx context.Context) (namedRoot []byte, err error)
+	DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error)
 	ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error)
 }
 
