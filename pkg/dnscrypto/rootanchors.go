@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -26,7 +26,7 @@ func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 		_ = response.Body.Close()
 		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
 	}
-	rootAnchorsXML, err = ioutil.ReadAll(response.Body)
+	rootAnchorsXML, err = io.ReadAll(response.Body)
 	if err != nil {
 		_ = response.Body.Close()
 		return nil, err

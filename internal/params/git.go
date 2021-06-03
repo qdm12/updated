@@ -3,7 +3,7 @@ package params
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 
@@ -86,7 +86,7 @@ func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
 		return "", err
 	}
 
-	b, err := ioutil.ReadAll(file)
+	b, err := io.ReadAll(file)
 	if err != nil {
 		return "", err
 	}

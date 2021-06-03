@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -76,7 +76,7 @@ func (b *builder) buildForSource(
 		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
 	}
 
-	content, err := ioutil.ReadAll(response.Body)
+	content, err := io.ReadAll(response.Body)
 	if err != nil {
 		_ = response.Body.Close()
 		return nil, err

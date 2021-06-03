@@ -6,7 +6,7 @@ import (
 	"crypto/md5" //nolint:gosec
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/qdm12/updated/pkg/constants"
@@ -26,7 +26,7 @@ func (d *dnsCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, er
 		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
 	}
 
-	namedRoot, err = ioutil.ReadAll(response.Body)
+	namedRoot, err = io.ReadAll(response.Body)
 	if err != nil {
 		_ = response.Body.Close()
 		return nil, err

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -47,7 +47,7 @@ func (c *client) Query(ctx context.Context) error {
 		return nil
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil {
 		return fmt.Errorf("%w: %s: %s", ErrReadHealthcheckBody, resp.Status, err)
