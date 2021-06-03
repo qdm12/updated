@@ -2,6 +2,7 @@ package run
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -75,6 +76,8 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	}
 }
 
+var errEncountered = errors.New("at least one error encountered")
+
 func (r *runner) singleRun(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
@@ -124,7 +127,7 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 	}
 	close(chError)
 	if errorMessages != nil {
-		return fmt.Errorf(strings.Join(errorMessages, "; "))
+		return fmt.Errorf("%w: %s", errEncountered, strings.Join(errorMessages, "; "))
 	}
 	if gitClient != nil {
 		message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
