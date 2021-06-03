@@ -63,7 +63,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 ##### github.com/qdm12/updated ######
 #####################################
 `)
-	HTTPTimeout, err := envParams.GetHTTPTimeout(libparams.Default("3s"))
+	HTTPTimeout, err := envParams.GetHTTPTimeout(libparams.Default("10s"))
 	if err != nil {
 		logger.Error(err)
 		return 1
