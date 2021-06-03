@@ -10,7 +10,7 @@ import (
 // GetNamedRootMD5 obtains the MD5 Hex encoded checksum for the named root
 // from the environment variable NAMED_ROOT_MD5.
 func (p *getter) GetNamedRootMD5() (namedRootMD5 string, err error) {
-	s, err := p.envParams.GetEnv("NAMED_ROOT_MD5", libparams.Default(dnscrypto.NamedRootMD5Sum))
+	s, err := p.envParams.Get("NAMED_ROOT_MD5", libparams.Default(dnscrypto.NamedRootMD5Sum))
 	if err != nil {
 		return "", err
 	} else if !p.verifier.MatchMD5String(s) {
@@ -22,7 +22,7 @@ func (p *getter) GetNamedRootMD5() (namedRootMD5 string, err error) {
 // GetRootAnchorsSHA256 obtains the SHA256 Hex encoded checksum for the root anchors
 // from the environment variable ROOT_ANCHORS_SHA256.
 func (p *getter) GetRootAnchorsSHA256() (rootAnchorsSHA256 string, err error) {
-	s, err := p.envParams.GetEnv("ROOT_ANCHORS_SHA256", libparams.Default(dnscrypto.RootAnchorsSHA256Sum))
+	s, err := p.envParams.Get("ROOT_ANCHORS_SHA256", libparams.Default(dnscrypto.RootAnchorsSHA256Sum))
 	if err != nil {
 		return "", err
 	} else if !p.verifier.Match64BytesHex(s) {

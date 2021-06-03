@@ -18,13 +18,13 @@ var (
 // GetGit obtains 'yes' or 'no' to do Git operations, from the environment
 // variable GIT, and defaults to no.
 func (p *getter) GetGit() (doGit bool, err error) {
-	return p.envParams.GetYesNo("GIT", libparams.Default("no"))
+	return p.envParams.YesNo("GIT", libparams.Default("no"))
 }
 
 // GetSSHKnownHostsFilepath obtains the file path of the SSH known_hosts file,
 // from the environment variable SSH_KNOWN_HOSTS and defaults to /known_hosts.
 func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
-	filePath, err = p.envParams.GetPath("SSH_KNOWN_HOSTS", libparams.Default("./known_hosts"))
+	filePath, err = p.envParams.Path("SSH_KNOWN_HOSTS", libparams.Default("./known_hosts"))
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +46,7 @@ func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 // GetSSHKeyFilepath obtains the file path of the SSH private key,
 // from the environment variable SSH_KEY and defaults to ./key.
 func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
-	filePath, err = p.envParams.GetPath("SSH_KEY", libparams.Default("./key"))
+	filePath, err = p.envParams.Path("SSH_KEY", libparams.Default("./key"))
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +70,7 @@ func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
 // empty string passphrase if no file is provided.
 // It uses files instead of environment variables for security reasons.
 func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
-	filePath, err := p.envParams.GetPath("SSH_KEY_PASSPHRASE")
+	filePath, err := p.envParams.Path("SSH_KEY_PASSPHRASE")
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +101,7 @@ func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
 // GetGitURL obtains the Git repository URL to interact with,
 // from the environment variable GIT_URL.
 func (p *getter) GetGitURL() (url string, err error) {
-	url, err = p.envParams.GetEnv("GIT_URL", libparams.Compulsory())
+	url, err = p.envParams.Get("GIT_URL", libparams.Compulsory())
 	if err != nil {
 		return "", err
 	}

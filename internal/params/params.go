@@ -29,12 +29,12 @@ type Getter interface {
 }
 
 type getter struct {
-	envParams  libparams.EnvParams
+	envParams  libparams.Env
 	verifier   verification.Verifier
 	osOpenFile funcs.OSOpenFile
 }
 
-func NewGetter(envParams libparams.EnvParams, osOpenFile funcs.OSOpenFile) Getter {
+func NewGetter(envParams libparams.Env, osOpenFile funcs.OSOpenFile) Getter {
 	return &getter{
 		envParams:  envParams,
 		verifier:   verification.NewVerifier(),
@@ -45,11 +45,11 @@ func NewGetter(envParams libparams.EnvParams, osOpenFile funcs.OSOpenFile) Gette
 // GetOutputDir obtains the output directory path to write files to
 // from the environment variable OUTPUT_DIR and defaults to ./files.
 func (p *getter) GetOutputDir() (path string, err error) {
-	return p.envParams.GetPath("OUTPUT_DIR", libparams.Default("./files"))
+	return p.envParams.Path("OUTPUT_DIR", libparams.Default("./files"))
 }
 
 // GetPeriod obtains the period in minutes from the PERIOD environment
 // variable. It defaults to 600 minutes.
 func (p *getter) GetPeriod() (periodMinutes time.Duration, err error) {
-	return p.envParams.GetDuration("PERIOD", libparams.Default("600m"))
+	return p.envParams.Duration("PERIOD", libparams.Default("600m"))
 }

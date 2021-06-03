@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -44,13 +45,13 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	envParams := libparams.NewEnvParams()
-	encoding, level, err := envParams.GetLoggerConfig()
+	envParams := libparams.NewEnv()
+	level, err := envParams.LogLevel("LOG_LEVEL", libparams.Default("info"))
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	logger, err := logging.NewLogger(encoding, level)
+	logger := logging.NewParent(logging.Settings{Level: level})
 	if err != nil {
 		fmt.Println(err)
 		return 1
@@ -63,7 +64,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 ##### github.com/qdm12/updated ######
 #####################################
 `)
-	HTTPTimeout, err := envParams.GetHTTPTimeout(libparams.Default("10s"))
+	HTTPTimeout, err := envParams.Duration("HTTP_TIMEOUT", libparams.Default("10s"))
 	if err != nil {
 		logger.Error(err)
 		return 1
@@ -85,10 +86,12 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	logger.Info(allSettings.String())
 
 	wg := &sync.WaitGroup{}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		errs := connectivity.NewConnectivity(HTTPTimeout).Checks(ctx, "github.com")
+		connChecker := connectivity.NewConnectivity(net.DefaultResolver, client)
+		errs := connChecker.Checks(ctx, "github.com")
 		for _, err := range errs {
 			logger.Warn(err)
 		}
@@ -97,14 +100,14 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	const healthServerAddr = "127.0.0.1:9999"
 	healthServer := health.NewServer(
 		healthServerAddr,
-		logger.WithPrefix("healthcheck server: "),
+		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 	)
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
 	runner := run.New(allSettings, client, osOpenFile, logger, gotify, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
-	gotify.NotifyAndLog(constants.ProgramName, logging.InfoLevel, logger, "Program started")
+	gotify.NotifyAndLog(constants.ProgramName, logging.LevelInfo, logger, "Program started")
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)
 
@@ -125,14 +128,14 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	return 1
 }
 
-func setupGotify(envParams libparams.EnvParams) (admin.Gotify, error) {
-	URL, err := envParams.GetGotifyURL()
+func setupGotify(envParams libparams.Env) (admin.Gotify, error) {
+	URL, err := envParams.URL("GOTIFY_URL")
 	if err != nil {
 		return nil, err
 	} else if URL == nil {
 		return nil, nil
 	}
-	token, err := envParams.GetGotifyToken()
+	token, err := envParams.Get("GOTIFY_TOKEN", libparams.Compulsory())
 	if err != nil {
 		return nil, err
 	}

@@ -54,7 +54,7 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	defer ticker.Stop()
 	if err := r.singleRun(ctx); err != nil {
 		r.setHealthErr(err)
-		r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
+		r.gotify.NotifyAndLog(constants.ProgramName, logging.LevelError,
 			r.logger, err.Error())
 	} else {
 		r.setHealthErr(nil)
@@ -66,7 +66,7 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 		case <-ticker.C:
 			if err := r.singleRun(ctx); err != nil {
 				r.setHealthErr(err)
-				r.gotify.NotifyAndLog(constants.ProgramName, logging.ErrorLevel,
+				r.gotify.NotifyAndLog(constants.ProgramName, logging.LevelError,
 					r.logger, err.Error())
 			} else {
 				r.setHealthErr(nil)
