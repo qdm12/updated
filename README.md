@@ -83,7 +83,7 @@ This Go program only reads parameters from environment variables for ease of use
 
     | Environment variable | Default | Possible values | Description |
     | --- | --- | --- | --- |
-    | `NAMED_ROOT_MD5` | `d37cc65f3a0882f4dca52e82bc3f96cd` | MD5 hexadecimal sum or `""` | Named root MD5 sum. Disables checking if empty |
+    | `NAMED_ROOT_MD5` | `3479d7910b5feea4f153d349b36fca2b` | MD5 hexadecimal sum or `""` | Named root MD5 sum. Disables checking if empty |
     | `ROOT_ANCHORS_SHA256` | `45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770` | SHA256 hexadecimal sum or `""` | Root anchors SHA256 sum. Disables checking if empty |
 
 - Extras

@@ -12,7 +12,7 @@ services:
       - HTTP_TIMEOUT=5s
       - LOG_ENCODING=console
       - LOG_LEVEL=info
-      - NAMED_ROOT_MD5=ef14b29649fd3976c6f8e5812b263480
+      - NAMED_ROOT_MD5=3479d7910b5feea4f153d349b36fca2b
       - ROOT_ANCHORS_SHA256=45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770
       - TZ=America/Montreal
       - GIT=no
