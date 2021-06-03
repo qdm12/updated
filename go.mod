@@ -1,6 +1,6 @@
 module github.com/qdm12/updated
 
-go 1.15
+go 1.16
 
 require (
 	github.com/qdm12/golibs v0.0.0-20201227203847-2fd99ffdfdba
