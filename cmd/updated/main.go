@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -73,11 +74,12 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	client := &http.Client{
 		Timeout: HTTPTimeout,
 	}
-	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams)
+	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams, logger)
 	if err != nil {
 		logger.Error(err)
 		return 1
 	}
+
 	getter := params.NewGetter(envParams, osOpenFile)
 	allSettings, err := settings.Get(getter)
 	if err != nil {
@@ -133,7 +135,8 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	return 1
 }
 
-func setupShoutrrr(envParams libparams.Env) (sender *router.ServiceRouter, params *types.Params, err error) {
+func setupShoutrrr(envParams libparams.Env, logger logging.Logger) (
+	sender *router.ServiceRouter, params *types.Params, err error) {
 	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES")
 	if err != nil {
 		return nil, nil, err
@@ -141,6 +144,7 @@ func setupShoutrrr(envParams libparams.Env) (sender *router.ServiceRouter, param
 	var rawURLs []string
 	if shoutrrrURLs != "" {
 		rawURLs = strings.Split(shoutrrrURLs, ",")
+		logger.Info("Using " + strconv.Itoa(len(rawURLs)) + "Shoutrrr service URLs")
 	}
 
 	sender, err = shoutrrr.CreateSender(rawURLs...)
