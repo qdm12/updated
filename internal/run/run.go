@@ -56,9 +56,11 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	if err := r.singleRun(ctx); err != nil {
 		r.setHealthErr(err)
 		r.logger.Error(err.Error())
-		err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
-		if err != nil {
-			r.logger.Error(err.Error())
+		if r.gotify != nil {
+			err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
+			if err != nil {
+				r.logger.Error(err.Error())
+			}
 		}
 	} else {
 		r.setHealthErr(nil)
@@ -71,9 +73,11 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 			if err := r.singleRun(ctx); err != nil {
 				r.setHealthErr(err)
 				r.logger.Error(err.Error())
-				err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
-				if err != nil {
-					r.logger.Error(err.Error())
+				if r.gotify != nil {
+					err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
+					if err != nil {
+						r.logger.Error(err.Error())
+					}
 				}
 			} else {
 				r.setHealthErr(nil)

@@ -108,9 +108,11 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	runner := run.New(allSettings, client, osOpenFile, logger, gotify, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
 	logger.Info("Program started")
-	err = gotify.Notify(constants.ProgramName, 1, "Program started")
-	if err != nil {
-		logger.Error(err.Error())
+	if gotify != nil {
+		err := gotify.Notify(constants.ProgramName, 1, "Program started")
+		if err != nil {
+			logger.Error(err.Error())
+		}
 	}
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)
