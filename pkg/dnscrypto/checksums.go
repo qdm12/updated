@@ -1,7 +1,7 @@
 package dnscrypto
 
 const (
-	NamedRootMD5Sum      = "3479d7910b5feea4f153d349b36fca2b"
+	NamedRootMD5Sum      = "9cdf6a12db2dc558e299601015c37948"
 	RootAnchorsSHA256Sum = "45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770"
 )
 
