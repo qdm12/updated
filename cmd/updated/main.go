@@ -137,7 +137,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 
 func setupShoutrrr(envParams libparams.Env, logger logging.Logger) (
 	sender *router.ServiceRouter, params *types.Params, err error) {
-	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES")
+	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES", libparams.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err
 	}
