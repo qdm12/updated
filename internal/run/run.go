@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/qdm12/golibs/admin"
+	"github.com/containrrr/shoutrrr/pkg/router"
+	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
@@ -27,7 +27,8 @@ type Runner interface {
 type runner struct {
 	settings         settings.Settings
 	logger           logging.Logger
-	gotify           admin.Gotify
+	shoutrrrSender   *router.ServiceRouter
+	shoutrrrParams   *types.Params
 	osOpenFile       funcs.OSOpenFile
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
@@ -36,11 +37,13 @@ type runner struct {
 }
 
 func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpenFile,
-	logger logging.Logger, gotify admin.Gotify, setHealthErr func(err error)) Runner {
+	logger logging.Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
+	setHealthErr func(err error)) Runner {
 	return &runner{
 		settings:         settings,
 		logger:           logger,
-		gotify:           gotify,
+		shoutrrrSender:   shoutrrrSender,
+		shoutrrrParams:   shoutrrrParams,
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
 		dnscrypto:        dnscrypto.New(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
@@ -56,11 +59,9 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 	if err := r.singleRun(ctx); err != nil {
 		r.setHealthErr(err)
 		r.logger.Error(err.Error())
-		if r.gotify != nil {
-			err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
-			if err != nil {
-				r.logger.Error(err.Error())
-			}
+		errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
+		for _, err := range errs {
+			r.logger.Error(err.Error())
 		}
 	} else {
 		r.setHealthErr(nil)
@@ -73,11 +74,9 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 			if err := r.singleRun(ctx); err != nil {
 				r.setHealthErr(err)
 				r.logger.Error(err.Error())
-				if r.gotify != nil {
-					err := r.gotify.Notify(constants.ProgramName, 2, err.Error()) //nolint:gomnd
-					if err != nil {
-						r.logger.Error(err.Error())
-					}
+				errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
+				for _, err := range errs {
+					r.logger.Error(err.Error())
 				}
 			} else {
 				r.setHealthErr(nil)

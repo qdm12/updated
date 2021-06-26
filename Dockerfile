@@ -55,8 +55,7 @@ ENV \
     SSH_KNOWN_HOSTS=./known_hosts \
     NAMED_ROOT_MD5=9cdf6a12db2dc558e299601015c37948 \
     ROOT_ANCHORS_SHA256=45336725f9126db810a59896ae93819de743c416262f79c4444042c92e520770 \
-    GOTIFY_URL= \
-    GOTIFY_TOKEN=
+    SHOUTRRR_SERVICES=
 ENTRYPOINT ["/updated"]
 #HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updated","healthcheck"]
 USER 1000

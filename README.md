@@ -89,8 +89,7 @@ This Go program only reads parameters from environment variables for ease of use
 
     | Environment variable | Default | Possible values | Description |
     | --- | --- | --- | --- |
-    | `GOTIFY_URL` | | URL *string* | URL to Gotify server |
-    | `GOTIFY_TOKEN` | | *string* | Token for Gotify server |
+    | `SHOUTRRR_SERVICES` | | One or more comma separated Shoutrrr URLs | Comma separated list of [Shoutrrr URLs](https://containrrr.dev/shoutrrr/services/overview/) |
 
 ### Using Go
 

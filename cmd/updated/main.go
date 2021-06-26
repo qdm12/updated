@@ -7,15 +7,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
-	"time"
 
-	"github.com/qdm12/golibs/admin"
+	"github.com/containrrr/shoutrrr"
+	"github.com/containrrr/shoutrrr/pkg/router"
+	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
-	"github.com/qdm12/updated/internal/constants"
 	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/params"
@@ -72,7 +73,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	client := &http.Client{
 		Timeout: HTTPTimeout,
 	}
-	gotify, err := setupGotify(envParams)
+	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams)
 	if err != nil {
 		logger.Error(err)
 		return 1
@@ -105,14 +106,12 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
-	runner := run.New(allSettings, client, osOpenFile, logger, gotify, healthServer.SetHealthErr)
+	runner := run.New(allSettings, client, osOpenFile, logger, shoutrrrSender, shoutrrrParams, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
 	logger.Info("Program started")
-	if gotify != nil {
-		err := gotify.Notify(constants.ProgramName, 1, "Program started")
-		if err != nil {
-			logger.Error(err.Error())
-		}
+	errs := shoutrrrSender.Send("Program started", shoutrrrParams)
+	for _, err := range errs {
+		logger.Error(err.Error())
 	}
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)
@@ -134,16 +133,23 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	return 1
 }
 
-func setupGotify(envParams libparams.Env) (admin.Gotify, error) {
-	URL, err := envParams.URL("GOTIFY_URL")
+func setupShoutrrr(envParams libparams.Env) (sender *router.ServiceRouter, params *types.Params, err error) {
+	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES")
 	if err != nil {
-		return nil, err
-	} else if URL == nil {
-		return nil, nil
+		return nil, nil, err
 	}
-	token, err := envParams.Get("GOTIFY_TOKEN", libparams.Compulsory())
+	var rawURLs []string
+	if shoutrrrURLs != "" {
+		rawURLs = strings.Split(shoutrrrURLs, ",")
+	}
+
+	sender, err = shoutrrr.CreateSender(rawURLs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return admin.NewGotify(*URL, token, &http.Client{Timeout: time.Second}), nil
+
+	params = &types.Params{}
+	params.SetTitle("Updated")
+
+	return sender, params, nil
 }
