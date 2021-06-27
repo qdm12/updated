@@ -113,7 +113,9 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	logger.Info("Program started")
 	errs := shoutrrrSender.Send("Program started", shoutrrrParams)
 	for _, err := range errs {
-		logger.Error(err.Error())
+		if err != nil {
+			logger.Error(err.Error())
+		}
 	}
 	wg.Add(1)
 	go runner.Run(ctx, wg, allSettings.Period)

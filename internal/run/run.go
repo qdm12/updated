@@ -61,7 +61,9 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 		r.logger.Error(err.Error())
 		errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
 		for _, err := range errs {
-			r.logger.Error(err.Error())
+			if err != nil {
+				r.logger.Error(err.Error())
+			}
 		}
 	} else {
 		r.setHealthErr(nil)
@@ -76,7 +78,9 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 				r.logger.Error(err.Error())
 				errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
 				for _, err := range errs {
-					r.logger.Error(err.Error())
+					if err != nil {
+						r.logger.Error(err.Error())
+					}
 				}
 			} else {
 				r.setHealthErr(nil)
