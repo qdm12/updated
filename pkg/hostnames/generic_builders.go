@@ -32,7 +32,7 @@ func (b *builder) buildForSources(ctx context.Context, title string,
 			source.customPostCleanLine,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("building from %s: %w", source.url, err)
 		}
 		for _, hostname := range newHostnames {
 			totalHostnames++

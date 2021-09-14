@@ -28,7 +28,7 @@ func (b *builder) buildForSources(ctx context.Context, title string, sources []s
 			source.customPostCleanLine,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("building from %s: %w", source.url, err)
 		}
 		ips = append(ips, newIPs...)
 	}
