@@ -2,7 +2,6 @@ ARG ALPINE_VERSION=3.14
 ARG GO_VERSION=1.17
 
 FROM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates tzdata
 RUN mkdir /files && \
     chown 1000 /files && \
     chmod 700 /files
@@ -36,8 +35,6 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/updated" \
     org.opencontainers.image.title="updated" \
     org.opencontainers.image.description="Updated updates periodically files locally or to a Git repository"
-COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=alpine --chown=1000 /files /files
 COPY --chown=1000 known_hosts /known_hosts
 ENV \

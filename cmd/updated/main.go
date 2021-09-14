@@ -12,6 +12,9 @@ import (
 	"sync"
 	"syscall"
 
+	_ "time/tzdata"
+
+	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"

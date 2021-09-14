@@ -3,6 +3,7 @@ module github.com/qdm12/updated
 go 1.17
 
 require (
+	github.com/breml/rootcerts v0.1.0
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/qdm12/golibs v0.0.0-20210603202746-e5494e9c2ebb
 	github.com/stretchr/testify v1.7.0
