@@ -13,7 +13,7 @@ func (b *builder) BuildMalicious(ctx context.Context) (ips []string, err error) 
 			},
 		},
 		{
-			url: "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt",
+			url: "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/2.txt",
 			customPreCleanLine: func(line string) string {
 				found := b.verifier.SearchIPv4(line)
 				if len(found) == 0 {
