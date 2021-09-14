@@ -10,7 +10,7 @@ RUN mkdir /files && \
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ENV CGO_ENABLED=0
 RUN apk --update add git g++
-ARG GOLANGCI_LINT_VERSION=v1.40.1
+ARG GOLANGCI_LINT_VERSION=v1.42.1
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
 WORKDIR /tmp/gobuild
 COPY .golangci.yml .
