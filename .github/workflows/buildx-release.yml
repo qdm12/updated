@@ -32,5 +32,3 @@ jobs:
             -t qmcgaw/updated:${GITHUB_REF##*/} \
             --push \
             .
-      - run: curl -X POST https://hooks.microbadger.com/images/qmcgaw/updated/YvfYmxiEWsXD6iH2Dospfm_PBkc=
-        continue-on-error: true
