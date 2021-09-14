@@ -26,14 +26,14 @@ func (b *builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 				return line
 			},
 			customIsLineValid: func(line string) bool {
-				return !(strings.HasPrefix(line, "127.0.0.1 ") ||
-					strings.HasPrefix(line, "255.255.255.255") ||
-					strings.HasPrefix(line, "::1") ||
-					strings.HasPrefix(line, "fe80::1") ||
-					strings.HasPrefix(line, "ff00::0") ||
-					strings.HasPrefix(line, "ff02::1") ||
-					strings.HasPrefix(line, "ff02::2") ||
-					strings.HasPrefix(line, "ff02::3"))
+				return !strings.HasPrefix(line, "127.0.0.1 ") &&
+					!strings.HasPrefix(line, "255.255.255.255") &&
+					!strings.HasPrefix(line, "::1") &&
+					!strings.HasPrefix(line, "fe80::1") &&
+					!strings.HasPrefix(line, "ff00::0") &&
+					!strings.HasPrefix(line, "ff02::1") &&
+					!strings.HasPrefix(line, "ff02::2") &&
+					!strings.HasPrefix(line, "ff02::3")
 			},
 		},
 		{
