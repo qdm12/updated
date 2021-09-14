@@ -47,6 +47,10 @@ func (b *builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 				return !strings.HasPrefix(line, "local-data: \"")
 			},
 		},
+		// See https://github.com/blocklistproject/Lists
+		{url: "https://blocklistproject.github.io/Lists/alt-version/abuse-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/fraud-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
 	}
 	return b.buildForSources(ctx, "malicious", sources)
 }
@@ -74,6 +78,12 @@ func (b *builder) BuildAds(ctx context.Context) (hostnames []string, err error) 
 				return strings.TrimSuffix(line, ".")
 			},
 		},
+		// See https://github.com/blocklistproject/Lists
+		{url: "https://blocklistproject.github.io/Lists/alt-version/ads-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/malware-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/phishing-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/ransomware-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/scam-nl.txt"},
 	}
 	return b.buildForSources(ctx, "ads", sources)
 }
