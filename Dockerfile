@@ -1,5 +1,5 @@
 ARG ALPINE_VERSION=3.14
-ARG GO_VERSION=1.16
+ARG GO_VERSION=1.17
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
