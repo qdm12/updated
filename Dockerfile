@@ -1,26 +1,48 @@
+# Sets linux/amd64 in case it's not injected by older Docker versions
+ARG BUILDPLATFORM=linux/amd64
+
 ARG ALPINE_VERSION=3.14
 ARG GO_VERSION=1.17
+ARG XCPUTRANSLATE_VERSION=v0.6.0
+ARG GOLANGCI_LINT_VERSION=v1.42.1
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN mkdir /files && \
     chown 1000 /files && \
     chmod 700 /files
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
+
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 ENV CGO_ENABLED=0
-RUN apk --update add git g++
-ARG GOLANGCI_LINT_VERSION=v1.42.1
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
 WORKDIR /tmp/gobuild
-COPY .golangci.yml .
+RUN apk --update add git g++
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=golangci-lint /bin /go/bin/golangci-lint
 COPY go.mod go.sum ./
 RUN go mod download
-COPY cmd/updated/main.go cmd/app/main.go
-COPY internal ./internal
-COPY pkg ./pkg
-RUN CGO_ENABLED=1 go test -race ./...
+COPY pkg/ ./pkg/
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+
+FROM base AS test
+# Note on the go race detector:
+# - we set CGO_ENABLED=1 to have it enabled
+# - we installed g++ in the base stage to support the race detector
+ENV CGO_ENABLED=1
+ENTRYPOINT go test -race -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic ./...
+
+FROM base AS lint
+COPY .golangci.yml ./
 RUN golangci-lint run --timeout=10m
-RUN go build -trimpath -ldflags="-s -w" -o app cmd/app/main.go
+
+FROM base AS build
+ARG TARGETPLATFORM
+RUN GOARCH="$(xcputranslate translate -targetplatform=${TARGETPLATFORM} -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform=${TARGETPLATFORM} -field arm)" \
+    go build -trimpath -ldflags="-s -w \
+    " -o app cmd/updated/main.go
 
 FROM scratch
 ARG BUILD_DATE
@@ -56,4 +78,4 @@ ENV \
 ENTRYPOINT ["/updated"]
 #HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updated","healthcheck"]
 USER 1000
-COPY --from=builder --chown=1000 /tmp/gobuild/app /updated
+COPY --from=build --chown=1000 /tmp/gobuild/app /updated
