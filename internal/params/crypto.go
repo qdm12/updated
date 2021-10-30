@@ -13,10 +13,13 @@ var ErrNamedRootMD5Invalid = errors.New("named root MD5 sum is invalid")
 // GetNamedRootMD5 obtains the MD5 Hex encoded checksum for the named root
 // from the environment variable NAMED_ROOT_MD5.
 func (p *getter) GetNamedRootMD5() (namedRootMD5 string, err error) {
-	s, err := p.envParams.Get("NAMED_ROOT_MD5", libparams.Default(dnscrypto.NamedRootMD5Sum))
-	if err != nil {
+	s, err := p.envParams.Get("NAMED_ROOT_MD5")
+	switch {
+	case err != nil:
 		return "", err
-	} else if !p.verifier.MatchMD5String(s) {
+	case s == "":
+		return "", nil
+	case !p.verifier.MatchMD5String(s):
 		return "", fmt.Errorf("%w: not a 32 hexadecimal string: %s", ErrNamedRootMD5Invalid, s)
 	}
 	return s, nil
