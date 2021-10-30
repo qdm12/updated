@@ -28,11 +28,11 @@ type Getter interface {
 }
 
 type getter struct {
-	envParams libparams.Env
+	envParams libparams.Interface
 	verifier  verification.Verifier
 }
 
-func NewGetter(envParams libparams.Env) Getter {
+func NewGetter(envParams libparams.Interface) Getter {
 	return &getter{
 		envParams: envParams,
 		verifier:  verification.NewVerifier(),

@@ -13,7 +13,7 @@ import (
 
 func (b *Builder) buildForSources(ctx context.Context, title string,
 	sources []sourceType) (hostnames []string, err error) {
-	b.logger.Debug("building %s hostnames...", title)
+	b.logger.Debug(fmt.Sprintf("building %s hostnames...", title))
 	uniqueHostnames := make(map[string]bool)
 	totalHostnames := 0
 
@@ -39,7 +39,7 @@ func (b *Builder) buildForSources(ctx context.Context, title string,
 	}
 	sortedHostnames.Sort()
 
-	b.logger.Info("built %s hostnames: %d fetched, %d unique", title, totalHostnames, sortedHostnames.Len())
+	b.logger.Info(fmt.Sprintf("built %s hostnames: %d fetched, %d unique", title, totalHostnames, sortedHostnames.Len()))
 
 	return sortedHostnames, nil
 }
@@ -87,7 +87,7 @@ func (b *Builder) buildForSource(ctx context.Context, url string,
 		}
 	}
 
-	b.logger.Info("built hostnames %s during %s", url, time.Since(tStart))
+	b.logger.Info(fmt.Sprintf("built hostnames %s during %s", url, time.Since(tStart)))
 
 	return hostnames, nil
 }

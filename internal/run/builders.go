@@ -2,6 +2,7 @@ package run
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,7 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 	for _, warning := range warnings {
 		r.logger.Warn(warning)
 	}
-	r.logger.Info("Trimmed down %d IP address lines", removedCount)
+	r.logger.Info(fmt.Sprintf("Trimmed down %d IP address lines", removedCount))
 
 	ipsFilepath := filepath.Join(r.settings.OutputDir, ipsFilename)
 	file, err = os.OpenFile(ipsFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)

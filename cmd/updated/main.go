@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,7 +17,6 @@ import (
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/params"
@@ -47,13 +45,13 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	envParams := libparams.NewEnv()
+	envParams := libparams.New()
 	level, err := envParams.LogLevel("LOG_LEVEL", libparams.Default("info"))
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	logger := logging.NewParent(logging.Settings{Level: level})
+	logger := logging.New(logging.Settings{Level: level})
 	if err != nil {
 		fmt.Println(err)
 		return 1
@@ -68,7 +66,7 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 `)
 	HTTPTimeout, err := envParams.Duration("HTTP_TIMEOUT", libparams.Default("10s"))
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err.Error())
 		return 1
 	}
 	client := &http.Client{
@@ -76,29 +74,19 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 	}
 	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams, logger)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err.Error())
 		return 1
 	}
 
 	getter := params.NewGetter(envParams)
 	allSettings, err := settings.Get(getter)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(err.Error())
 		return 1
 	}
 	logger.Info(allSettings.String())
 
 	wg := &sync.WaitGroup{}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		connChecker := connectivity.NewConnectivity(net.DefaultResolver, client)
-		errs := connChecker.Checks(ctx, "github.com")
-		for _, err := range errs {
-			logger.Warn(err)
-		}
-	}()
 
 	const healthServerAddr = "127.0.0.1:9999"
 	healthServer := health.NewServer(
@@ -130,14 +118,14 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 	case <-ctx.Done():
 		logger.Warn("context canceled, shutting down")
 	case signal := <-signalsCh:
-		logger.Warn("Caught OS signal %s, shutting down", signal)
+		logger.Warn("Caught OS signal " + fmt.Sprint(signal) + ", shutting down")
 		cancel()
 	}
 	wg.Wait()
 	return 1
 }
 
-func setupShoutrrr(envParams libparams.Env, logger logging.Logger) (
+func setupShoutrrr(envParams libparams.Interface, logger logging.Logger) (
 	sender *router.ServiceRouter, params *types.Params, err error) {
 	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES", libparams.CaseSensitiveValue())
 	if err != nil {

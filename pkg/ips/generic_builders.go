@@ -19,7 +19,7 @@ type sourceType struct {
 }
 
 func (b *Builder) buildForSources(ctx context.Context, title string, sources []sourceType) (ips []string, err error) {
-	b.logger.Info("building %s IPs...", title)
+	b.logger.Info(fmt.Sprintf("building %s IPs...", title))
 	for _, source := range sources {
 		newIPs, err := b.buildForSource(
 			ctx, source.url,
@@ -32,7 +32,7 @@ func (b *Builder) buildForSources(ctx context.Context, title string, sources []s
 		}
 		ips = append(ips, newIPs...)
 	}
-	b.logger.Info("built %s IPs: %d IP address lines fetched", title, len(ips))
+	b.logger.Info(fmt.Sprintf("built %s IPs: %d IP address lines fetched", title, len(ips)))
 	return ips, nil
 }
 

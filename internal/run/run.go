@@ -92,8 +92,8 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
 		executionTime := time.Since(tStart)
-		r.logger.Info("overall execution took %s", executionTime)
-		r.logger.Info("sleeping for %s", r.settings.Period-executionTime)
+		r.logger.Info(fmt.Sprintf("overall execution took %s", executionTime))
+		r.logger.Info(fmt.Sprintf("sleeping for %s", r.settings.Period-executionTime))
 	}()
 	var gitClient git.Interface
 	gitSettings := r.settings.Git
@@ -144,7 +144,7 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		if err := gitClient.UploadAllChanges(ctx, message); err != nil {
 			return err
 		}
-		r.logger.Info("Committed to Git: %s", message)
+		r.logger.Info("Committed to Git: " + message)
 	}
 	return nil
 }
