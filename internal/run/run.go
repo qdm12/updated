@@ -30,7 +30,7 @@ type runner struct {
 	shoutrrrParams   *types.Params
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
-	dnscrypto        dnscrypto.DNSCrypto
+	dnscrypto        dnscrypto.Interface
 	setHealthErr     func(err error)
 }
 

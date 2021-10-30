@@ -9,16 +9,16 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/qdm12/updated/pkg/constants"
 )
 
 // DownloadRootAnchorsXML fetches the root anchors XML file online and parses it.
-func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, constants.RootAnchorsURL, nil)
+func (d *DNSCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error) {
+	const url = "https://data.iana.org/root-anchors/root-anchors.xml"
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := d.client.Do(request)
 	if err != nil {
 		return nil, err
@@ -26,11 +26,13 @@ func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 		_ = response.Body.Close()
 		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
 	}
+
 	rootAnchorsXML, err = io.ReadAll(response.Body)
 	if err != nil {
 		_ = response.Body.Close()
 		return nil, err
 	}
+
 	if err := response.Body.Close(); err != nil {
 		return nil, err
 	}
@@ -49,9 +51,10 @@ func (d *dnsCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 	return rootAnchorsXML, nil
 }
 
-// ConvertRootAnchorsToRootKeys converts root anchors XML data to a list
-// of DNS root keys.
-func (d *dnsCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error) {
+// ConvertRootAnchorsToRootKeys converts root anchors XML data
+// to a list of DNS root keys.
+func (d *DNSCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (
+	rootKeys []string, err error) {
 	var trustAnchor struct {
 		XMLName   xml.Name `xml:"TrustAnchor"`
 		ID        string   `xml:"id,attr"`
@@ -67,13 +70,16 @@ func (d *dnsCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKey
 			Digest     string    `xml:"Digest"`
 		} `xml:"KeyDigest"`
 	}
-	if err := xml.Unmarshal(rootAnchorsXML, &trustAnchor); err != nil {
+	err = xml.Unmarshal(rootAnchorsXML, &trustAnchor)
+	if err != nil {
 		return nil, err
 	}
-	for _, keyDigest := range trustAnchor.KeyDigest {
-		rootKey := fmt.Sprintf(". IN DS %d %d %d %s",
-			keyDigest.KeyTag, keyDigest.Algorithm, keyDigest.DigestType, keyDigest.Digest)
-		rootKeys = append(rootKeys, rootKey)
+
+	rootKeys = make([]string, len(trustAnchor.KeyDigest))
+	for i, keyDigest := range trustAnchor.KeyDigest {
+		rootKeys[i] = fmt.Sprintf(". IN DS %d %d %d %s", keyDigest.KeyTag,
+			keyDigest.Algorithm, keyDigest.DigestType, keyDigest.Digest)
 	}
+
 	return rootKeys, nil
 }

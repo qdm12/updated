@@ -8,16 +8,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/qdm12/updated/pkg/constants"
 )
 
 // DownloadNamedRoot downloads the named.root and returns it.
-func (d *dnsCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, err error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, constants.NamedRootURL, nil)
+func (d *DNSCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, err error) {
+	const url = "https://www.internic.net/domain/named.root"
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := d.client.Do(request)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,7 @@ func (d *dnsCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, er
 		_ = response.Body.Close()
 		return nil, err
 	}
+
 	if err := response.Body.Close(); err != nil {
 		return nil, err
 	}
