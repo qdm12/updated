@@ -29,7 +29,7 @@ type runner struct {
 	shoutrrrSender   *router.ServiceRouter
 	shoutrrrParams   *types.Params
 	ipsBuilder       ips.Builder
-	hostnamesBuilder hostnames.Builder
+	hostnamesBuilder hostnames.Interface
 	dnscrypto        dnscrypto.Interface
 	setHealthErr     func(err error)
 }
@@ -43,7 +43,7 @@ func New(settings settings.Settings, client *http.Client,
 		shoutrrrSender:   shoutrrrSender,
 		shoutrrrParams:   shoutrrrParams,
 		ipsBuilder:       ips.NewBuilder(client, logger),
-		hostnamesBuilder: hostnames.NewBuilder(client, logger),
+		hostnamesBuilder: hostnames.New(client, logger),
 		dnscrypto:        dnscrypto.New(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
 		setHealthErr:     setHealthErr,
 	}

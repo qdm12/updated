@@ -8,20 +8,22 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type Builder interface {
+var _ Interface = (*Builder)(nil)
+
+type Interface interface {
 	BuildSurveillance(ctx context.Context) (hostnames []string, err error)
 	BuildMalicious(ctx context.Context) (hostnames []string, err error)
 	BuildAds(ctx context.Context) (hostnames []string, err error)
 }
 
-type builder struct {
+type Builder struct {
 	client   *http.Client
 	logger   logging.Logger
 	verifier verification.Verifier
 }
 
-func NewBuilder(client *http.Client, logger logging.Logger) Builder {
-	return &builder{
+func New(client *http.Client, logger logging.Logger) *Builder {
+	return &Builder{
 		client:   client,
 		logger:   logger,
 		verifier: verification.NewVerifier(),
