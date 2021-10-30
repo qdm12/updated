@@ -4,7 +4,11 @@ import (
 	"strings"
 )
 
-func preCleanLine(line string, customPreCleanLine func(line string) string) string {
+type cleanLineFunc func(line string) (cleaned string)
+
+type checkLineFunc func(line string) (ok bool)
+
+func preCleanLine(line string, preClean cleanLineFunc) string {
 	// remove comment
 	var lineWithoutComment string
 	for _, r := range line {
@@ -17,26 +21,26 @@ func preCleanLine(line string, customPreCleanLine func(line string) string) stri
 
 	line = strings.TrimSpace(line)
 
-	if customPreCleanLine != nil {
-		line = customPreCleanLine(line)
+	if preClean != nil {
+		line = preClean(line)
 	}
 
 	return line
 }
 
-func isLineValid(line string, customIsLineValid func(line string) bool) bool {
+func isLineValid(line string, checkLine checkLineFunc) bool {
 	if line == "" {
 		return false
-	} else if customIsLineValid != nil && !customIsLineValid(line) {
-		return false
+	} else if checkLine == nil {
+		return true
 	}
-	return true
+	return checkLine(line)
 }
 
-func postCleanLine(line string, customPostCleanLine func(line string) string) string {
+func postCleanLine(line string, postClean cleanLineFunc) string {
 	line = strings.TrimSpace(line)
-	if customPostCleanLine != nil {
-		line = customPostCleanLine(line)
+	if postClean != nil {
+		line = postClean(line)
 	}
 	return line
 }

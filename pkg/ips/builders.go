@@ -1,20 +1,23 @@
 package ips
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // BuildMalicious obtains lists of IP addresses from different web sources
 // and returns a list of CIDR IP ranges of malicious IP addresses.
-func (b *builder) BuildMalicious(ctx context.Context) (ips []string, err error) {
+func (b *Builder) BuildMalicious(ctx context.Context) (ips []string, err error) {
 	sources := []sourceType{
 		{
 			url: "https://iplists.firehol.org/files/firehol_level1.netset",
-			customIsLineValid: func(line string) bool {
+			checkLine: func(line string) (ok bool) {
 				return line != "0.0.0.0/8"
 			},
 		},
 		{
 			url: "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/2.txt",
-			customPreCleanLine: func(line string) string {
+			preClean: func(line string) string {
 				found := b.verifier.SearchIPv4(line)
 				if len(found) == 0 {
 					return ""
@@ -23,13 +26,16 @@ func (b *builder) BuildMalicious(ctx context.Context) (ips []string, err error) 
 			},
 		},
 	}
+
 	return b.buildForSources(ctx, "malicious", sources)
 }
 
 // BuildIPsFromHostnames builds a list of IP addresses obtained by resolving
 // some hostnames given.
-func (b *builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
-	b.logger.Info("finding IP addresses from %d hostnames", len(hostnames))
+func (b *Builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
+	b.logger.Info("finding IP addresses from " +
+		fmt.Sprint(len(hostnames)) + " hostnames...")
+
 	ch := make(chan []string)
 	for _, hostname := range hostnames {
 		// TODO with 100 workers
@@ -47,10 +53,12 @@ func (b *builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
 			ch <- IPs
 		}(hostname)
 	}
+
 	for n := 0; n < len(hostnames); n++ {
 		newIPs := <-ch
 		ips = append(ips, newIPs...)
 	}
-	b.logger.Info("found %d IP addresses from %d hostnames", len(ips), len(hostnames))
+
+	b.logger.Info(fmt.Sprintf("found %d IP addresses from %d hostnames", len(ips), len(hostnames)))
 	return ips
 }
