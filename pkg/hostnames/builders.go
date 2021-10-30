@@ -42,7 +42,7 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/abuse-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/fraud-nl.txt"},
-		{url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
+		// {url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
 	}
 	return b.buildForSources(ctx, "malicious", sources)
 }
