@@ -29,7 +29,7 @@ func (p *getter) GetSSHKnownHostsFilepath() (filePath string, err error) {
 		return "", err
 	}
 
-	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("%w: filepath %q", ErrSSHKnownHostFileDoesNotExist, filePath)
 	} else if err != nil {
@@ -51,7 +51,7 @@ func (p *getter) GetSSHKeyFilepath() (filePath string, err error) {
 		return "", err
 	}
 
-	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("%w: filepath %q", ErrSSHKnownHostFileDoesNotExist, filePath)
 	} else if err != nil {
@@ -79,7 +79,7 @@ func (p *getter) GetSSHKeyPassphrase() (passphrase string, err error) {
 		return "", nil
 	}
 
-	file, err := p.osOpenFile(filePath, os.O_RDONLY, 0)
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("%w: filepath %q", ErrSSHKeyFileDoesNotExist, filePath)
 	} else if err != nil {

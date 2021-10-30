@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-
 	_ "time/tzdata"
 
 	_ "github.com/breml/rootcerts"
@@ -21,7 +20,6 @@ import (
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
-	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
@@ -31,11 +29,10 @@ import (
 func main() {
 	ctx := context.Background()
 	args := os.Args
-	osOpenFile := os.OpenFile
-	os.Exit(_main(ctx, args, osOpenFile))
+	os.Exit(_main(ctx, args))
 }
 
-func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exitCode int) {
+func _main(ctx context.Context, args []string) (exitCode int) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -83,7 +80,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 		return 1
 	}
 
-	getter := params.NewGetter(envParams, osOpenFile)
+	getter := params.NewGetter(envParams)
 	allSettings, err := settings.Get(getter)
 	if err != nil {
 		logger.Error(err)
@@ -111,7 +108,7 @@ func _main(ctx context.Context, args []string, osOpenFile funcs.OSOpenFile) (exi
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
-	runner := run.New(allSettings, client, osOpenFile, logger, shoutrrrSender, shoutrrrParams, healthServer.SetHealthErr)
+	runner := run.New(allSettings, client, logger, shoutrrrSender, shoutrrrParams, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
 	logger.Info("Program started")
 	errs := shoutrrrSender.Send("Program started", shoutrrrParams)

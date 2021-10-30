@@ -18,7 +18,7 @@ func (r *runner) buildNamedRoot(ctx context.Context) error {
 	}
 
 	filepath := filepath.Join(r.settings.OutputDir, constants.NamedRootFilename)
-	file, err := r.osOpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	}
 
 	xmlFilepath := filepath.Join(r.settings.OutputDir, constants.RootAnchorsFilename)
-	file, err := r.osOpenFile(xmlFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(xmlFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	}
 
 	rootKeysFilepath := filepath.Join(r.settings.OutputDir, constants.RootKeyFilename)
-	file, err = r.osOpenFile(rootKeysFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err = os.OpenFile(rootKeysFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

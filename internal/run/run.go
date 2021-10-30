@@ -12,7 +12,6 @@ import (
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/updated/internal/funcs"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
 	"github.com/qdm12/updated/pkg/git"
@@ -29,14 +28,13 @@ type runner struct {
 	logger           logging.Logger
 	shoutrrrSender   *router.ServiceRouter
 	shoutrrrParams   *types.Params
-	osOpenFile       funcs.OSOpenFile
 	ipsBuilder       ips.Builder
 	hostnamesBuilder hostnames.Builder
 	dnscrypto        dnscrypto.DNSCrypto
 	setHealthErr     func(err error)
 }
 
-func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpenFile,
+func New(settings settings.Settings, client *http.Client,
 	logger logging.Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
 	setHealthErr func(err error)) Runner {
 	return &runner{
@@ -47,7 +45,6 @@ func New(settings settings.Settings, client *http.Client, osOpenFile funcs.OSOpe
 		ipsBuilder:       ips.NewBuilder(client, logger),
 		hostnamesBuilder: hostnames.NewBuilder(client, logger),
 		dnscrypto:        dnscrypto.New(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
-		osOpenFile:       osOpenFile,
 		setHealthErr:     setHealthErr,
 	}
 }

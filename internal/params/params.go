@@ -5,7 +5,6 @@ import (
 
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/verification"
-	"github.com/qdm12/updated/internal/funcs"
 )
 
 type Getter interface {
@@ -29,16 +28,14 @@ type Getter interface {
 }
 
 type getter struct {
-	envParams  libparams.Env
-	verifier   verification.Verifier
-	osOpenFile funcs.OSOpenFile
+	envParams libparams.Env
+	verifier  verification.Verifier
 }
 
-func NewGetter(envParams libparams.Env, osOpenFile funcs.OSOpenFile) Getter {
+func NewGetter(envParams libparams.Env) Getter {
 	return &getter{
-		envParams:  envParams,
-		verifier:   verification.NewVerifier(),
-		osOpenFile: osOpenFile,
+		envParams: envParams,
+		verifier:  verification.NewVerifier(),
 	}
 }
 

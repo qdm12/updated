@@ -18,7 +18,7 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 	}
 
 	hostnamesFilepath := filepath.Join(r.settings.OutputDir, hostnamesFilename)
-	file, err := r.osOpenFile(hostnamesFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(hostnamesFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 	r.logger.Info("Trimmed down %d IP address lines", removedCount)
 
 	ipsFilepath := filepath.Join(r.settings.OutputDir, ipsFilename)
-	file, err = r.osOpenFile(ipsFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err = os.OpenFile(ipsFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
