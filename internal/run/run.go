@@ -95,11 +95,11 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		r.logger.Info("overall execution took %s", executionTime)
 		r.logger.Info("sleeping for %s", r.settings.Period-executionTime)
 	}()
-	var gitClient git.Client
+	var gitClient git.Interface
 	gitSettings := r.settings.Git
 	if gitSettings != nil {
 		// Setup Git repository
-		gitClient, err = git.NewClient(
+		gitClient, err = git.New(
 			gitSettings.SSHKnownHosts,
 			gitSettings.SSHKey,
 			gitSettings.SSHKeyPassphrase,
@@ -108,7 +108,7 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		if err := gitClient.Pull(); err != nil {
+		if err := gitClient.Pull(ctx); err != nil {
 			return err
 		}
 	}
@@ -141,7 +141,7 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 	}
 	if gitClient != nil {
 		message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
-		if err := gitClient.UploadAllChanges(message); err != nil {
+		if err := gitClient.UploadAllChanges(ctx, message); err != nil {
 			return err
 		}
 		r.logger.Info("Committed to Git: %s", message)
