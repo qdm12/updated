@@ -5,10 +5,10 @@ package git
 import (
 	"fmt"
 
+	gogit "github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/plumbing/transport"
+	"github.com/go-git/go-git/v6/plumbing/transport/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
-	gogit "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // Client contains an authentication method and a repository object.
@@ -37,7 +37,7 @@ func New(sshKnownHostsPath, sshKeyPath, sshKeyPassword,
 
 	repo, err := gogit.PlainOpen(absolutePath)
 	if err != nil {
-		repo, err = gogit.PlainClone(absolutePath, false, &gogit.CloneOptions{
+		repo, err = gogit.PlainClone(absolutePath, &gogit.CloneOptions{
 			URL:      url,
 			Progress: nil,
 			Auth:     auth,
