@@ -18,6 +18,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/breml/rootcerts v0.1.1 h1:r/bo1asz7ihRKUSW2gSuqmbh5Bpny4irLIUM9OSRBXw=
 github.com/breml/rootcerts v0.1.1/go.mod h1:24FDtzYMpqIeYC7QzaE8VPRQaFZU5TIUDlyk8qwjD88=
+github.com/breml/rootcerts v0.3.1 h1:PTO35OcW58K2ZYtdBykCsZh9k/eRd57bY65EHrKK/xA=
+github.com/breml/rootcerts v0.3.1/go.mod h1:S/PKh+4d1HUn4HQovEB8hPJZO6pUZYrIhmXBhsegfXw=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/chromedp/cdproto v0.0.0-20190614062957-d6d2f92b486d/go.mod h1:S8mB5wY3vV+vRIzf39xDXsw3XKYewW9X6rW2aEmkrSw=
 github.com/chromedp/cdproto v0.0.0-20190621002710-8cbd498dd7a0/go.mod h1:S8mB5wY3vV+vRIzf39xDXsw3XKYewW9X6rW2aEmkrSw=

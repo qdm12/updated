@@ -3,7 +3,7 @@ module github.com/qdm12/updated
 go 1.25
 
 require (
-	github.com/breml/rootcerts v0.1.1
+	github.com/breml/rootcerts v0.3.1
 	github.com/containrrr/shoutrrr v0.5.2
 	github.com/go-git/go-git/v6 v6.0.0-20250923192830-1ad5b9c7da82
 	github.com/qdm12/golibs v0.0.0-20210915134941-19815c6f95fe
