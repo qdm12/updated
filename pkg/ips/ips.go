@@ -1,7 +1,7 @@
+// Package ips provides functionality to build and clean IP lists.
 package ips
 
 import (
-	"context"
 	"net"
 	"net/http"
 
@@ -9,14 +9,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-var _ Interface = (*Builder)(nil)
-
-type Interface interface {
-	BuildMalicious(ctx context.Context) (IPs []string, err error)
-	BuildIPsFromHostnames(hostnames []string) (IPs []string)
-	CleanIPs(IPs []string) (cleanIPs []string, removedCount int, warnings []string)
-}
-
+// Builder builds IP lists.
 type Builder struct {
 	client   *http.Client
 	logger   logging.Logger
@@ -24,6 +17,7 @@ type Builder struct {
 	lookupIP func(host string) ([]net.IP, error)
 }
 
+// New returns a new builder of IP lists.
 func New(client *http.Client, logger logging.Logger) *Builder {
 	return &Builder{
 		client:   client,

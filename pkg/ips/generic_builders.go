@@ -36,9 +36,7 @@ func (b *Builder) buildForSources(ctx context.Context, title string, sources []s
 	return ips, nil
 }
 
-var (
-	ErrBadStatusCode = errors.New("bad HTTP status code")
-)
+var ErrBadStatusCode = errors.New("bad HTTP status code")
 
 func (b *Builder) buildForSource(ctx context.Context, url string,
 	preClean cleanLineFunc, checkLine checkLineFunc, postClean cleanLineFunc,
@@ -46,27 +44,9 @@ func (b *Builder) buildForSource(ctx context.Context, url string,
 	b.logger.Debug("building IPs from " + url + "...")
 	tStart := time.Now()
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	content, err := getContent(ctx, b.client, url)
 	if err != nil {
-		return nil, err
-	}
-
-	response, err := b.client.Do(request)
-	if err != nil {
-		return nil, err
-	} else if response.StatusCode != http.StatusOK {
-		_ = response.Body.Close()
-		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
-	}
-
-	content, err := io.ReadAll(response.Body)
-	if err != nil {
-		_ = response.Body.Close()
-		return nil, err
-	}
-
-	if err := response.Body.Close(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting content: %w", err)
 	}
 
 	lines := strings.Split(string(content), "\n")
@@ -104,6 +84,34 @@ func (b *Builder) buildForSource(ctx context.Context, url string,
 	b.logger.Info("built IPs from " + url + " during " + time.Since(tStart).String())
 
 	return ips, nil
+}
+
+func getContent(ctx context.Context, client *http.Client, url string) (content []byte, err error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	} else if response.StatusCode != http.StatusOK {
+		_ = response.Body.Close()
+		return nil, fmt.Errorf("%w: %d %s", ErrBadStatusCode, response.StatusCode, response.Status)
+	}
+
+	content, err = io.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return nil, err
+	}
+
+	err = response.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return content, nil
 }
 
 func netIPIsPrivate(ip net.IP) bool {

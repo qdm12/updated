@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// BuildSurveillance builds a list of surveillance hostnames.
 func (b *Builder) BuildSurveillance(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa"},
@@ -12,6 +13,7 @@ func (b *Builder) BuildSurveillance(ctx context.Context) (hostnames []string, er
 	return b.buildForSources(ctx, "surveillance", sources)
 }
 
+// BuildMalicious builds a list of malicious hostnames from different sources.
 func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
@@ -47,6 +49,7 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 	return b.buildForSources(ctx, "malicious", sources)
 }
 
+// BuildAds builds a list of ad hostnames from different sources.
 func (b *Builder) BuildAds(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{

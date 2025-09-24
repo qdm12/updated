@@ -1,3 +1,4 @@
+// Package constants holds program-wide constant values.
 package constants
 
 const (

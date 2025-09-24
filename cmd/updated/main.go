@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 	_ "time/tzdata"
 
 	_ "github.com/breml/rootcerts"
@@ -25,37 +26,73 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	background := context.Background()
+	ctx, cancel := context.WithCancel(background)
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 	args := os.Args
-	os.Exit(_main(ctx, args))
+	logger := logging.New(logging.Settings{})
+
+	errorCh := make(chan error)
+	go func() {
+		errorCh <- _main(ctx, args, logger)
+	}()
+
+	// Wait for OS signal or run error
+	var err error
+	select {
+	case receivedSignal := <-signalCh:
+		signal.Stop(signalCh)
+		fmt.Println("")
+		logger.Warn("Caught OS signal " + receivedSignal.String() + ", shutting down")
+		cancel()
+	case err = <-errorCh:
+		close(errorCh)
+		if err == nil { // expected exit such as healthcheck
+			os.Exit(0)
+		}
+		logger.Error(err.Error())
+		cancel()
+	}
+
+	// Shutdown timed sequence, and force exit on second OS signal
+	const shutdownGracePeriod = 5 * time.Second
+	timer := time.NewTimer(shutdownGracePeriod)
+	select {
+	case shutdownErr := <-errorCh:
+		timer.Stop()
+		if shutdownErr != nil {
+			logger.Warn("Shutdown failed: " + shutdownErr.Error())
+			os.Exit(1)
+		}
+
+		logger.Info("Shutdown successful")
+		if err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	case <-timer.C:
+		logger.Warn("Shutdown timed out")
+		os.Exit(1)
+	}
 }
 
-func _main(ctx context.Context, args []string) (exitCode int) {
+func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
 		client := health.NewClient()
-		if err := client.Query(ctx); err != nil {
-			fmt.Println(err)
-			return 1
-		}
-		return 0
+		return client.Query(ctx)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	envParams := libparams.New()
 	level, err := envParams.LogLevel("LOG_LEVEL", libparams.Default("info"))
 	if err != nil {
-		fmt.Println(err)
-		return 1
+		return fmt.Errorf("getting log level: %w", err)
 	}
-	logger := logging.New(logging.Settings{Level: level})
-	if err != nil {
-		fmt.Println(err)
-		return 1
-	}
+
+	logger.PatchLevel(level)
 
 	fmt.Print(`
 #####################################
@@ -66,23 +103,20 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 `)
 	HTTPTimeout, err := envParams.Duration("HTTP_TIMEOUT", libparams.Default("10s"))
 	if err != nil {
-		logger.Error(err.Error())
-		return 1
+		return fmt.Errorf("getting HTTP timeout: %w", err)
 	}
 	client := &http.Client{
 		Timeout: HTTPTimeout,
 	}
 	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams, logger)
 	if err != nil {
-		logger.Error(err.Error())
-		return 1
+		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
 
 	getter := params.NewGetter(envParams)
 	allSettings, err := settings.Get(getter)
 	if err != nil {
-		logger.Error(err.Error())
-		return 1
+		return fmt.Errorf("getting settings: %w", err)
 	}
 	logger.Info(allSettings.String())
 
@@ -106,27 +140,14 @@ func _main(ctx context.Context, args []string) (exitCode int) {
 		}
 	}
 	wg.Add(1)
-	go runner.Run(ctx, wg, allSettings.Period)
-
-	signalsCh := make(chan os.Signal, 1)
-	signal.Notify(signalsCh,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		os.Interrupt,
-	)
-	select {
-	case <-ctx.Done():
-		logger.Warn("context canceled, shutting down")
-	case signal := <-signalsCh:
-		logger.Warn("Caught OS signal " + fmt.Sprint(signal) + ", shutting down")
-		cancel()
-	}
+	runner.Run(ctx, wg, allSettings.Period) // this can only exit when context is canceled.
 	wg.Wait()
-	return 1
+	return nil
 }
 
 func setupShoutrrr(envParams libparams.Interface, logger logging.Logger) (
-	sender *router.ServiceRouter, params *types.Params, err error) {
+	sender *router.ServiceRouter, params *types.Params, err error,
+) {
 	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES", libparams.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err

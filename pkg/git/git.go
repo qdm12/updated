@@ -1,7 +1,8 @@
+// Package git provides a Git client for performing Git operations such as
+// cloning, pulling, committing, and pushing changes to a repository.
 package git
 
 import (
-	"context"
 	"fmt"
 
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -9,20 +10,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
-
-var _ Interface = (*Client)(nil)
-
-type Interface interface {
-	Branch(branchName string) error
-	CheckoutBranch(branchName string) error
-	Pull(ctx context.Context) error
-	Status() (string, error)
-	IsClean() (bool, error)
-	Add(filename string) error
-	Commit(message string) error
-	Push(ctx context.Context) error
-	UploadAllChanges(ctx context.Context, message string) (err error)
-}
 
 // Client contains an authentication method and a repository object.
 // It is used for all Git related operations.
@@ -35,7 +22,8 @@ type Client struct {
 // URL and an absolute path where to read/write the repository.
 // SSH was chosen as it is available on all Git servers (Github, Gitea, Gitlab, etc.)
 func New(sshKnownHostsPath, sshKeyPath, sshKeyPassword,
-	url, absolutePath string) (client *Client, err error) {
+	url, absolutePath string,
+) (client *Client, err error) {
 	// Only PEM private keys supported
 	auth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, sshKeyPassword)
 	if err != nil {

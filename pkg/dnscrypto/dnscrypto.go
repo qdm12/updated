@@ -1,28 +1,13 @@
+// Package dnscrypto provides functionality for downloading and verifying
+// DNS cryptographic files such as the named root and root anchors.
 package dnscrypto
 
 import (
-	"context"
 	"net/http"
 	"sync"
 )
 
-var _ Interface = (*DNSCrypto)(nil)
-
-type Interface interface {
-	NamedRootManager
-	RootAnchorsManager
-}
-
-type NamedRootManager interface {
-	SetNamedRootHexMD5(namedRootHexMD5 string)
-	DownloadNamedRoot(ctx context.Context) (namedRoot []byte, err error)
-}
-type RootAnchorsManager interface {
-	SetRootAnchorsHexSHA256(rootAnchorsHexSHA256 string)
-	DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML []byte, err error)
-	ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (rootKeys []string, err error)
-}
-
+// DNSCrypto handles downloading and verifying DNS crypto related files.
 type DNSCrypto struct {
 	client                 *http.Client
 	namedRootHexMD5        string
@@ -31,10 +16,13 @@ type DNSCrypto struct {
 	rootAnchorsHexSHA256Mu sync.RWMutex
 }
 
+// New creates a new DNSCrypto object.
 func New(client *http.Client,
-	namedRootHexMD5, rootAnchorsHexSHA256 string) *DNSCrypto {
+	namedRootHexMD5, rootAnchorsHexSHA256 string,
+) *DNSCrypto {
 	return &DNSCrypto{
 		client:               client,
 		namedRootHexMD5:      namedRootHexMD5,
-		rootAnchorsHexSHA256: rootAnchorsHexSHA256}
+		rootAnchorsHexSHA256: rootAnchorsHexSHA256,
+	}
 }

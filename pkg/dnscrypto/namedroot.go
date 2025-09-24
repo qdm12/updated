@@ -1,6 +1,5 @@
 package dnscrypto
 
-//nolint:gci
 import (
 	"context"
 	"crypto/md5" //nolint:gosec
@@ -32,7 +31,8 @@ func (d *DNSCrypto) DownloadNamedRoot(ctx context.Context) (namedRoot []byte, er
 		return nil, err
 	}
 
-	if err := response.Body.Close(); err != nil {
+	err = response.Body.Close()
+	if err != nil {
 		return nil, err
 	}
 

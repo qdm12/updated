@@ -3,6 +3,7 @@ package ips
 import (
 	"context"
 	"fmt"
+	"strconv"
 )
 
 // BuildMalicious obtains lists of IP addresses from different web sources
@@ -34,7 +35,7 @@ func (b *Builder) BuildMalicious(ctx context.Context) (ips []string, err error) 
 // some hostnames given.
 func (b *Builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
 	b.logger.Info("finding IP addresses from " +
-		fmt.Sprint(len(hostnames)) + " hostnames...")
+		strconv.Itoa(len(hostnames)) + " hostnames...")
 
 	ch := make(chan []string)
 	for _, hostname := range hostnames {
@@ -54,7 +55,7 @@ func (b *Builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
 		}(hostname)
 	}
 
-	for n := 0; n < len(hostnames); n++ {
+	for range hostnames {
 		newIPs := <-ch
 		ips = append(ips, newIPs...)
 	}

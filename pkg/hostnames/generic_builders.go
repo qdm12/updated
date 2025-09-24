@@ -12,7 +12,8 @@ import (
 )
 
 func (b *Builder) buildForSources(ctx context.Context, title string,
-	sources []sourceType) (hostnames []string, err error) {
+	sources []sourceType,
+) (hostnames []string, err error) {
 	b.logger.Debug(fmt.Sprintf("building %s hostnames...", title))
 	uniqueHostnames := make(map[string]bool)
 	totalHostnames := 0
@@ -44,9 +45,7 @@ func (b *Builder) buildForSources(ctx context.Context, title string,
 	return sortedHostnames, nil
 }
 
-var (
-	ErrBadStatusCode = errors.New("bad HTTP status code")
-)
+var ErrBadStatusCode = errors.New("bad HTTP status code")
 
 func (b *Builder) buildForSource(ctx context.Context, url string,
 	preClean cleanLineFunc, checkLine checkLineFunc, postClean cleanLineFunc,
@@ -73,7 +72,8 @@ func (b *Builder) buildForSource(ctx context.Context, url string,
 		return nil, err
 	}
 
-	if err := response.Body.Close(); err != nil {
+	err = response.Body.Close()
+	if err != nil {
 		return nil, err
 	}
 

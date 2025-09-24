@@ -1,12 +1,13 @@
+// Package settings handles the application settings.
 package settings
 
 import (
+	"fmt"
 	"strings"
 	"time"
-
-	"github.com/qdm12/updated/internal/params"
 )
 
+// Settings holds the application settings.
 type Settings struct {
 	OutputDir        string
 	Period           time.Duration
@@ -15,15 +16,40 @@ type Settings struct {
 		NamedRootMD5      string
 		RootAnchorsSHA256 string
 	}
-	Git *struct {
-		GitURL           string
-		SSHKnownHosts    string
-		SSHKey           string
-		SSHKeyPassphrase string
-	}
+	Git *Git
 }
 
-func Get(getter params.Getter) (s Settings, err error) {
+// Git holds the Git related settings.
+type Git struct {
+	GitURL           string
+	SSHKnownHosts    string
+	SSHKey           string
+	SSHKeyPassphrase string
+}
+
+// Getter defines an interface to get settings.
+type Getter interface {
+	// General getters
+	GetOutputDir() (path string, err error)
+	GetPeriod() (period time.Duration, err error)
+
+	// Git
+	GetGit() (doGit bool, err error)
+	GetSSHKnownHostsFilepath() (filePath string, err error)
+	GetSSHKeyFilepath() (filePath string, err error)
+	GetSSHKeyPassphrase() (passphrase string, err error)
+	GetGitURL() (URL string, err error)
+
+	// Crypto
+	GetNamedRootMD5() (namedRootMD5 string, err error)
+	GetRootAnchorsSHA256() (rootAnchorsSHA256 string, err error)
+
+	// IPs blocking
+	GetResolveHostnames() (resolveHostnames bool, err error)
+}
+
+// Get retrieves the settings using the provided [Getter].
+func Get(getter Getter) (s Settings, err error) {
 	s.OutputDir, err = getter.GetOutputDir()
 	if err != nil {
 		return s, err
@@ -47,32 +73,35 @@ func Get(getter params.Getter) (s Settings, err error) {
 	git, err := getter.GetGit()
 	if err != nil {
 		return s, err
-	} else if !git {
-		return s, nil
+	} else if git {
+		s.Git = new(Git)
+		*s.Git, err = readGit(getter)
+		if err != nil {
+			return s, fmt.Errorf("reading git settings: %w", err)
+		}
 	}
-	s.Git = new(struct {
-		GitURL           string
-		SSHKnownHosts    string
-		SSHKey           string
-		SSHKeyPassphrase string
-	})
-	s.Git.GitURL, err = getter.GetGitURL()
-	if err != nil {
-		return s, err
-	}
-	s.Git.SSHKnownHosts, err = getter.GetSSHKnownHostsFilepath()
-	if err != nil {
-		return s, err
-	}
-	s.Git.SSHKey, err = getter.GetSSHKeyFilepath()
-	if err != nil {
-		return s, err
-	}
-	s.Git.SSHKeyPassphrase, err = getter.GetSSHKeyPassphrase()
-	if err != nil {
-		return s, err
-	}
+
 	return s, nil
+}
+
+func readGit(getter Getter) (g Git, err error) {
+	g.GitURL, err = getter.GetGitURL()
+	if err != nil {
+		return g, fmt.Errorf("getting Git URL: %w", err)
+	}
+	g.SSHKnownHosts, err = getter.GetSSHKnownHostsFilepath()
+	if err != nil {
+		return g, fmt.Errorf("getting SSH known hosts filepath: %w", err)
+	}
+	g.SSHKey, err = getter.GetSSHKeyFilepath()
+	if err != nil {
+		return g, fmt.Errorf("getting SSH key filepath: %w", err)
+	}
+	g.SSHKeyPassphrase, err = getter.GetSSHKeyPassphrase()
+	if err != nil {
+		return g, fmt.Errorf("getting SSH key passphrase: %w", err)
+	}
+	return g, nil
 }
 
 func (s *Settings) String() (result string) {

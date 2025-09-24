@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/qdm12/updated/internal/constants"
 )
 
-func (r *runner) buildNamedRoot(ctx context.Context) error {
+func (r *Runner) buildNamedRoot(ctx context.Context) error {
 	// Build named root from internic.net
 	namedRoot, err := r.dnscrypto.DownloadNamedRoot(ctx)
 	if err != nil {
@@ -18,7 +17,8 @@ func (r *runner) buildNamedRoot(ctx context.Context) error {
 	}
 
 	filepath := filepath.Join(r.settings.OutputDir, constants.NamedRootFilename)
-	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	const perms = 0o600
+	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perms) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -29,14 +29,15 @@ func (r *runner) buildNamedRoot(ctx context.Context) error {
 		return err
 	}
 
-	if err := file.Close(); err != nil {
+	err = file.Close()
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
+func (r *Runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	// Build root anchors XML from data.iana.org
 	rootAnchorsXML, err := r.dnscrypto.DownloadRootAnchorsXML(ctx)
 	if err != nil {
@@ -48,36 +49,37 @@ func (r *runner) buildRootAnchorsAndKeys(ctx context.Context) error {
 	}
 
 	xmlFilepath := filepath.Join(r.settings.OutputDir, constants.RootAnchorsFilename)
-	file, err := os.OpenFile(xmlFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	err = writeFile(xmlFilepath, rootAnchorsXML)
 	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(rootAnchorsXML)
-	if err != nil {
-		_ = file.Close()
-		return err
-	}
-
-	if err := file.Close(); err != nil {
-		return err
+		return fmt.Errorf("writing root anchors XML: %w", err)
 	}
 
 	rootKeysFilepath := filepath.Join(r.settings.OutputDir, constants.RootKeyFilename)
-	file, err = os.OpenFile(rootKeysFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	err = writeLines(rootKeysFilepath, rootKeys)
+	if err != nil {
+		return fmt.Errorf("writing root keys: %w", err)
+	}
+
+	return nil
+}
+
+func writeFile(filePath string, data []byte) error {
+	const perms = 0o600
+
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perms) //nolint:gosec
 	if err != nil {
 		return err
 	}
 
-	_, err = file.WriteString(strings.Join(rootKeys, "\n"))
+	_, err = file.Write(data)
 	if err != nil {
 		_ = file.Close()
 		return err
 	}
 
-	if err := file.Close(); err != nil {
+	err = file.Close()
+	if err != nil {
 		return err
 	}
-
 	return nil
 }

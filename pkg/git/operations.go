@@ -26,14 +26,14 @@ var (
 func (c *Client) Branch(branchName string) (err error) {
 	headRef, err := c.repo.Head()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrHead, err)
+		return fmt.Errorf("%w: %w", ErrHead, err)
 	}
 
 	refName := plumbing.NewBranchReferenceName(branchName)
 	ref := plumbing.NewHashReference(refName, headRef.Hash())
 	err = c.repo.Storer.SetReference(ref)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrSetReference, err)
+		return fmt.Errorf("%w: %w", ErrSetReference, err)
 	}
 
 	return nil
@@ -43,7 +43,7 @@ func (c *Client) Branch(branchName string) (err error) {
 func (c *Client) CheckoutBranch(branchName string) (err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	err = workTree.Checkout(&gogit.CheckoutOptions{
@@ -62,7 +62,7 @@ func (c *Client) CheckoutBranch(branchName string) (err error) {
 func (c *Client) Pull(ctx context.Context) (err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	options := &gogit.PullOptions{
@@ -79,10 +79,11 @@ func (c *Client) Pull(ctx context.Context) (err error) {
 	return nil
 }
 
+// Status returns the git status of the working tree.
 func (c *Client) Status() (statusString string, err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return "", fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	status, err := workTree.Status()
@@ -93,24 +94,26 @@ func (c *Client) Status() (statusString string, err error) {
 	return status.String(), nil
 }
 
+// IsClean checks if the working tree is clean (no uncommitted changes).
 func (c *Client) IsClean() (clean bool, err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return false, fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return false, fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	status, err := workTree.Status()
 	if err != nil {
-		return false, fmt.Errorf("%w: %s", ErrStatus, err)
+		return false, fmt.Errorf("%w: %w", ErrStatus, err)
 	}
 
 	return status.IsClean(), err
 }
 
+// Add stages a file or files.
 func (c *Client) Add(filename string) (err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	_, err = workTree.Add(filename)
@@ -121,17 +124,19 @@ func (c *Client) Add(filename string) (err error) {
 	return nil
 }
 
+// Commit commits changes to the local repository with the given message.
 func (c *Client) Commit(message string) (err error) {
 	workTree, err := c.repo.Worktree()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrWorkTree, err)
+		return fmt.Errorf("%w: %w", ErrWorkTree, err)
 	}
 
 	options := &gogit.CommitOptions{
 		Author: &object.Signature{
 			Name: "updated",
 			When: time.Now(),
-		}}
+		},
+	}
 
 	_, err = workTree.Commit(message, options)
 	if err != nil {
@@ -141,6 +146,7 @@ func (c *Client) Commit(message string) (err error) {
 	return nil
 }
 
+// Push pushes local changes to the remote repository.
 func (c *Client) Push(ctx context.Context) (err error) {
 	options := &gogit.PushOptions{
 		Auth:     c.auth,
@@ -150,21 +156,23 @@ func (c *Client) Push(ctx context.Context) (err error) {
 	return c.repo.PushContext(ctx, options)
 }
 
+// UploadAllChanges adds all changes, commits them with the given message and pushes them.
 func (c *Client) UploadAllChanges(ctx context.Context,
-	message string) (err error) {
+	message string,
+) (err error) {
 	err = c.Add(".")
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrAdd, err)
+		return fmt.Errorf("%w: %w", ErrAdd, err)
 	}
 
 	err = c.Commit(message)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrCommit, err)
+		return fmt.Errorf("%w: %w", ErrCommit, err)
 	}
 
 	err = c.Push(ctx)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrPush, err)
+		return fmt.Errorf("%w: %w", ErrPush, err)
 	}
 
 	return nil

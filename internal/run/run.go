@@ -1,3 +1,4 @@
+// Package run contains the main update loop runner.
 package run
 
 import (
@@ -19,25 +20,24 @@ import (
 	"github.com/qdm12/updated/pkg/ips"
 )
 
-type Runner interface {
-	Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration)
-}
-
-type runner struct {
+// Runner runs the main update loop.
+type Runner struct {
 	settings         settings.Settings
 	logger           logging.Logger
 	shoutrrrSender   *router.ServiceRouter
 	shoutrrrParams   *types.Params
-	ipsBuilder       ips.Interface
-	hostnamesBuilder hostnames.Interface
-	dnscrypto        dnscrypto.Interface
+	ipsBuilder       *ips.Builder
+	hostnamesBuilder *hostnames.Builder
+	dnscrypto        *dnscrypto.DNSCrypto
 	setHealthErr     func(err error)
 }
 
+// New creates a new Runner.
 func New(settings settings.Settings, client *http.Client,
 	logger logging.Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
-	setHealthErr func(err error)) Runner {
-	return &runner{
+	setHealthErr func(err error),
+) *Runner {
+	return &Runner{
 		settings:         settings,
 		logger:           logger,
 		shoutrrrSender:   shoutrrrSender,
@@ -49,11 +49,13 @@ func New(settings settings.Settings, client *http.Client,
 	}
 }
 
-func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration) {
+// Run starts the main loop that runs every period duration until the context is done.
+func (r *Runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration) {
 	defer wg.Done()
 	ticker := time.NewTicker(period)
 	defer ticker.Stop()
-	if err := r.singleRun(ctx); err != nil {
+	err := r.singleRun(ctx)
+	if err != nil {
 		r.setHealthErr(err)
 		r.logger.Error(err.Error())
 		errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
@@ -70,7 +72,8 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := r.singleRun(ctx); err != nil {
+			err := r.singleRun(ctx)
+			if err != nil {
 				r.setHealthErr(err)
 				r.logger.Error(err.Error())
 				errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
@@ -88,14 +91,14 @@ func (r *runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Durati
 
 var errEncountered = errors.New("at least one error encountered")
 
-func (r *runner) singleRun(ctx context.Context) (err error) {
+func (r *Runner) singleRun(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
 		executionTime := time.Since(tStart)
 		r.logger.Info(fmt.Sprintf("overall execution took %s", executionTime))
 		r.logger.Info(fmt.Sprintf("sleeping for %s", r.settings.Period-executionTime))
 	}()
-	var gitClient git.Interface
+	var gitClient *git.Client
 	gitSettings := r.settings.Git
 	if gitSettings != nil {
 		// Setup Git repository
@@ -108,7 +111,8 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		if err := gitClient.Pull(ctx); err != nil {
+		err = gitClient.Pull(ctx)
+		if err != nil {
 			return err
 		}
 	}
@@ -129,7 +133,7 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		chError <- r.buildSurveillance(ctx)
 	}()
 	var errorMessages []string
-	for N := 0; N < 5; N++ {
+	for range 5 {
 		err := <-chError
 		if err != nil {
 			errorMessages = append(errorMessages, err.Error())
@@ -140,8 +144,9 @@ func (r *runner) singleRun(ctx context.Context) (err error) {
 		return fmt.Errorf("%w: %s", errEncountered, strings.Join(errorMessages, "; "))
 	}
 	if gitClient != nil {
-		message := fmt.Sprintf("Update of %s", time.Now().Format("2006-01-02"))
-		if err := gitClient.UploadAllChanges(ctx, message); err != nil {
+		message := "Update of " + time.Now().Format("2006-01-02")
+		err = gitClient.UploadAllChanges(ctx, message)
+		if err != nil {
 			return err
 		}
 		r.logger.Info("Committed to Git: " + message)

@@ -10,28 +10,19 @@ import (
 	"github.com/qdm12/updated/internal/constants"
 )
 
-func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
+func (r *Runner) buildBlockLists(ctx context.Context, buildHostnames,
 	buildIps func(ctx context.Context) ([]string, error),
-	hostnamesFilename, ipsFilename string) error {
+	hostnamesFilename, ipsFilename string,
+) error {
 	hostnames, err := buildHostnames(ctx)
 	if err != nil {
 		return err
 	}
 
 	hostnamesFilepath := filepath.Join(r.settings.OutputDir, hostnamesFilename)
-	file, err := os.OpenFile(hostnamesFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	err = writeLines(hostnamesFilepath, hostnames)
 	if err != nil {
-		return err
-	}
-
-	_, err = file.WriteString(strings.Join(hostnames, "\n"))
-	if err != nil {
-		_ = file.Close()
-		return err
-	}
-
-	if err := file.Close(); err != nil {
-		return err
+		return fmt.Errorf("writing hostnames: %w", err)
 	}
 
 	IPs := []string{}
@@ -52,25 +43,36 @@ func (r *runner) buildBlockLists(ctx context.Context, buildHostnames,
 	r.logger.Info(fmt.Sprintf("Trimmed down %d IP address lines", removedCount))
 
 	ipsFilepath := filepath.Join(r.settings.OutputDir, ipsFilename)
-	file, err = os.OpenFile(ipsFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	err = writeLines(ipsFilepath, IPs)
+	if err != nil {
+		return fmt.Errorf("writing IPs: %w", err)
+	}
+
+	return nil
+}
+
+func writeLines(filePath string, lines []string) error {
+	const perms = 0o600
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perms) //nolint:gosec
 	if err != nil {
 		return err
 	}
 
-	_, err = file.WriteString(strings.Join(IPs, "\n"))
+	_, err = file.WriteString(strings.Join(lines, "\n"))
 	if err != nil {
 		_ = file.Close()
 		return err
 	}
 
-	if err := file.Close(); err != nil {
+	err = file.Close()
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *runner) buildMalicious(ctx context.Context) error {
+func (r *Runner) buildMalicious(ctx context.Context) error {
 	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildMalicious,
 		r.ipsBuilder.BuildMalicious,
@@ -79,7 +81,7 @@ func (r *runner) buildMalicious(ctx context.Context) error {
 	)
 }
 
-func (r *runner) buildAds(ctx context.Context) error {
+func (r *Runner) buildAds(ctx context.Context) error {
 	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildAds,
 		nil,
@@ -88,7 +90,7 @@ func (r *runner) buildAds(ctx context.Context) error {
 	)
 }
 
-func (r *runner) buildSurveillance(ctx context.Context) error {
+func (r *Runner) buildSurveillance(ctx context.Context) error {
 	return r.buildBlockLists(ctx,
 		r.hostnamesBuilder.BuildSurveillance,
 		nil,

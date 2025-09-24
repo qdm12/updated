@@ -33,7 +33,8 @@ func (d *DNSCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 		return nil, err
 	}
 
-	if err := response.Body.Close(); err != nil {
+	err = response.Body.Close()
+	if err != nil {
 		return nil, err
 	}
 
@@ -54,7 +55,8 @@ func (d *DNSCrypto) DownloadRootAnchorsXML(ctx context.Context) (rootAnchorsXML 
 // ConvertRootAnchorsToRootKeys converts root anchors XML data
 // to a list of DNS root keys.
 func (d *DNSCrypto) ConvertRootAnchorsToRootKeys(rootAnchorsXML []byte) (
-	rootKeys []string, err error) {
+	rootKeys []string, err error,
+) {
 	var trustAnchor struct {
 		XMLName   xml.Name `xml:"TrustAnchor"`
 		ID        string   `xml:"id,attr"`

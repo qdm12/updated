@@ -1,68 +1,118 @@
-linters-settings:
-  maligned:
-    suggest-new: true
-  misspell:
-    locale: US
+version: "2"
 
-issues:
-  exclude-rules:
-    - text: "mnd: Magic number: 0644*"
-      linters:
-        - gomnd
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
 
 linters:
-  disable-all: true
+  settings:
+    misspell:
+      locale: US
+
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        text: "exported: exported const .+ should have comment \\(or a comment on this block\\) or be unexported"
+        path: "^internal\\/constants\\/constants\\.go$"
+      - linters:
+          - revive
+        source: "^.+Err.+ = .+$"
+        text: "exported: exported var Err.+ should have comment or be unexported"
+      - linters:
+          - revive
+        path: "^cmd\\/.+$"
+        text: "package-comments: should have a package comment"
+
   enable:
+    - asasalint
     - asciicheck
+    - bidichk
     - bodyclose
-    - deadcode
+    - containedctx
+    - copyloopvar
+    - cyclop
+    - decorder
     - dogsled
     - dupl
+    - dupword
+    - durationcheck
+    - embeddedstructfieldcheck
+    - err113
     - errcheck
+    - errchkjson
+    - errname
+    - errorlint
     - exhaustive
-    - exportloopref
-    - gci
+    - exptostd
+    - fatcontext
+    - forcetypeassert
+    - funcorder
+    - funlen
+    - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
+    - gochecksumtype
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
     - goheader
-    - goimports
-    - gomnd
+    - gomoddirectives
     - goprintffuncname
     - gosec
-    - goerr113
-    - gosimple
+    - gosmopolitan
     - govet
+    - grouper
+    - iface
     - importas
+    - inamedparam
     - ineffassign
+    - interfacebloat
+    - intrange
+    - ireturn
     - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
     - misspell
+    - mnd
+    - musttag
     - nakedret
     - nestif
     - nilerr
+    - nilnesserr
+    - nilnil
     - noctx
+    - noinlineerr
     - nolintlint
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
     - prealloc
     - predeclared
+    - promlinter
+    - reassign
+    - recvcheck
+    - revive
     - rowserrcheck
-    - exportloopref
+    - sloglint
     - sqlclosecheck
     - staticcheck
-    - structcheck
+    - tagalign
+    - tagliatelle
+    - testableexamples
+    - testifylint
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
-    - unused
-    - varcheck
+    - usestdlibvars
+    - usetesting
+    - wastedassign
     - whitespace
-
-run:
-  skip-dirs:
-    - .devcontainer
-    - .github
+    - zerologlint

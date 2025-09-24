@@ -1,3 +1,4 @@
+// Package health provides a health HTTP server and client.
 package health
 
 import (
@@ -9,28 +10,26 @@ import (
 	"github.com/qdm12/golibs/logging"
 )
 
-type Server interface {
-	Run(ctx context.Context, wg *sync.WaitGroup)
-	SetHealthErr(err error)
-}
-
-type server struct {
+// Server represents a health HTTP server.
+type Server struct {
 	address string
 	logger  logging.Logger
 	handler *handler
 }
 
-func NewServer(address string, logger logging.Logger) Server {
-	return &server{
+// NewServer creates a new health server.
+func NewServer(address string, logger logging.Logger) *Server {
+	return &Server{
 		address: address,
 		logger:  logger,
 		handler: newHandler(logger),
 	}
 }
 
-func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
+// Run starts the HTTP server until the context is done.
+func (s *Server) Run(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	server := http.Server{Addr: s.address, Handler: s.handler}
+	server := http.Server{Addr: s.address, Handler: s.handler, ReadHeaderTimeout: time.Second}
 	go func() {
 		<-ctx.Done()
 		s.logger.Warn("shutting down (context canceled)")
@@ -38,7 +37,8 @@ func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
 		const shutdownGraceDuration = 2 * time.Second
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownGraceDuration)
 		defer cancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
+		err := server.Shutdown(shutdownCtx)
+		if err != nil {
 			s.logger.Error("failed shutting down: " + err.Error())
 		}
 	}()
@@ -52,6 +52,7 @@ func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
-func (s *server) SetHealthErr(err error) {
+// SetHealthErr sets the health error to be returned by the /health endpoint.
+func (s *Server) SetHealthErr(err error) {
 	s.handler.setHealthErr(err)
 }

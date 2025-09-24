@@ -1,27 +1,21 @@
+// Package hostnames provides functions to build lists of hostnames from various sources.
 package hostnames
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/verification"
 )
 
-var _ Interface = (*Builder)(nil)
-
-type Interface interface {
-	BuildSurveillance(ctx context.Context) (hostnames []string, err error)
-	BuildMalicious(ctx context.Context) (hostnames []string, err error)
-	BuildAds(ctx context.Context) (hostnames []string, err error)
-}
-
+// Builder builds hostnames lists.
 type Builder struct {
 	client   *http.Client
 	logger   logging.Logger
 	verifier verification.Verifier
 }
 
+// New returns a new builder of hostnames lists.
 func New(client *http.Client, logger logging.Logger) *Builder {
 	return &Builder{
 		client:   client,

@@ -53,12 +53,14 @@ func makeUniqueCIDRs(lines []string) (uniqueCIDRs []string) {
 	return uniqueCIDRs
 }
 
+//nolint:ireturn
 func buildCIDRRanger(cidrs []string) (ranger cidranger.Ranger, err error) {
 	ranger = cidranger.NewPCTrieRanger()
 	for _, CIDR := range cidrs {
 		_, CIDRPtr, err := net.ParseCIDR(CIDR)
 		if err == nil {
-			if err := ranger.Insert(cidranger.NewBasicRangerEntry(*CIDRPtr)); err != nil {
+			err = ranger.Insert(cidranger.NewBasicRangerEntry(*CIDRPtr))
+			if err != nil {
 				return nil, err
 			}
 		}

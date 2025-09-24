@@ -9,21 +9,23 @@ import (
 	"time"
 )
 
+// IsClientMode checks whether the program is run in client mode
+// to query the internal healthcheck server of another instance
+// of the program.
 func IsClientMode(args []string) bool {
 	return len(args) > 1 && args[1] == "healthcheck"
 }
 
-type Client interface {
-	Query(ctx context.Context) error
-}
-
-type client struct {
+// Client queries the internal healthcheck server of another instance
+// of the program.
+type Client struct {
 	*http.Client
 }
 
-func NewClient() Client {
+// NewClient creates a new health client with a timeout.
+func NewClient() *Client {
 	const timeout = 5 * time.Second
-	return &client{
+	return &Client{
 		Client: &http.Client{Timeout: timeout},
 	}
 }
@@ -35,7 +37,7 @@ var (
 
 // Query sends an HTTP request to the other instance of
 // the program, and to its internal healthcheck server.
-func (c *client) Query(ctx context.Context) error {
+func (c *Client) Query(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:9999", nil)
 	if err != nil {
 		return err
@@ -48,9 +50,14 @@ func (c *client) Query(ctx context.Context) error {
 	}
 
 	b, err := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
-		return fmt.Errorf("%w: %s: %s", ErrReadHealthcheckBody, resp.Status, err)
+		_ = resp.Body.Close()
+		return fmt.Errorf("%w: %s: %w", ErrReadHealthcheckBody, resp.Status, err)
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("closing body: %w", err)
 	}
 
 	return fmt.Errorf("%w: %s: %s", ErrBadStatusCode, resp.Status, string(b))
