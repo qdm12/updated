@@ -1,6 +1,6 @@
 module github.com/qdm12/updated
 
-go 1.17
+go 1.25
 
 require (
 	github.com/breml/rootcerts v0.1.1
