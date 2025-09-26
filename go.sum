@@ -84,6 +84,8 @@ github.com/qdm12/gosettings v0.4.4 h1:SM6tOZDf6k8qbjWU8KWyBF4mWIixfsKCfh9DGRLHlj
 github.com/qdm12/gosettings v0.4.4/go.mod h1:CPrt2YC4UsURTrslmhxocVhMCW03lIrqdH2hzIf5prg=
 github.com/qdm12/gotree v0.3.0 h1:Q9f4C571EFK7ZEsPkEL2oGZX7I+ZhVxhh1ZSydW+5yI=
 github.com/qdm12/gotree v0.3.0/go.mod h1:iz06uXmRR4Aq9v6tX7mosXStO/yGHxRA1hbyD0UVeYw=
+github.com/qdm12/log v0.1.0 h1:jYBd/xscHYpblzZAd2kjZp2YmuYHjAAfbTViJWxoPTw=
+github.com/qdm12/log v0.1.0/go.mod h1:Vchi5M8uBvHfPNIblN4mjXn/oSbiWguQIbsgF1zdQPI=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
 github.com/sergi/go-diff v1.4.0 h1:n/SP9D5ad1fORl+llWyN+D6qoUETXNZARKjyY2/KVCw=

@@ -6,19 +6,24 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/qdm12/golibs/logging"
 )
 
 // Server represents a health HTTP server.
 type Server struct {
 	address string
-	logger  logging.Logger
+	logger  Logger
 	handler *handler
 }
 
+// Logger represents a minimal logger interface.
+type Logger interface {
+	Info(s string)
+	Warn(s string)
+	Error(s string)
+}
+
 // NewServer creates a new health server.
-func NewServer(address string, logger logging.Logger) *Server {
+func NewServer(address string, logger Logger) *Server {
 	return &Server{
 		address: address,
 		logger:  logger,

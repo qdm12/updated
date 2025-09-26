@@ -1,13 +1,10 @@
 package settings
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gotree"
+	"github.com/qdm12/log"
 )
 
 // Log holds the logging related settings.
@@ -21,20 +18,13 @@ func (s *Log) Read(r *reader.Reader) {
 
 // SetDefaults sets the default values for the log settings.
 func (s *Log) SetDefaults() {
-	s.Level = gosettings.DefaultComparable(s.Level, logging.LevelInfo.String())
+	s.Level = gosettings.DefaultComparable(s.Level, log.LevelInfo.String())
 }
-
-var ErrLogLevelNotValid = errors.New("log level is not valid")
 
 // Validate validates the log settings.
 func (s Log) Validate() (err error) {
-	switch s.Level {
-	case logging.LevelDebug.String(), logging.LevelInfo.String(),
-		logging.LevelWarn.String(), logging.LevelError.String():
-		return nil
-	default:
-		return fmt.Errorf("%w: %q", ErrLogLevelNotValid, s.Level)
-	}
+	_, err = log.ParseLevel(s.Level)
+	return err
 }
 
 func (s Log) toLinesNode() (node *gotree.Node) {

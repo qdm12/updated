@@ -14,9 +14,9 @@ import (
 	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/types"
-	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/reader/sources/env"
+	"github.com/qdm12/log"
 	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/run"
 	"github.com/qdm12/updated/internal/settings"
@@ -28,7 +28,7 @@ func main() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 	args := os.Args
-	logger := logging.New(logging.Settings{})
+	logger := log.New()
 	reader := reader.New(reader.Settings{
 		Sources: []reader.Source{env.New(env.Settings{})},
 	})
@@ -78,7 +78,7 @@ func main() {
 }
 
 //nolint:funlen
-func _main(ctx context.Context, args []string, logger logging.ParentLogger,
+func _main(ctx context.Context, args []string, logger log.LoggerInterface,
 	reader *reader.Reader,
 ) (err error) {
 	if health.IsClientMode(args) {
@@ -101,7 +101,7 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger,
 	if err != nil {
 		return fmt.Errorf("getting log level: %w", err)
 	}
-	logger.PatchLevel(logLevel)
+	logger.Patch(log.SetLevel(logLevel))
 
 	var allSettings settings.Settings
 	err = allSettings.Read(reader)
@@ -127,7 +127,7 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger,
 	const healthServerAddr = "127.0.0.1:9999"
 	healthServer := health.NewServer(
 		healthServerAddr,
-		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
+		logger.New(log.SetComponent("healthcheck server")),
 	)
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
@@ -150,7 +150,7 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger,
 	return nil
 }
 
-func getLogLevel(reader *reader.Reader) (logging.Level, error) {
+func getLogLevel(reader *reader.Reader) (log.Level, error) {
 	var settings settings.Log
 	settings.Read(reader)
 	settings.SetDefaults()
@@ -158,11 +158,5 @@ func getLogLevel(reader *reader.Reader) (logging.Level, error) {
 	if err != nil {
 		return 0, fmt.Errorf("validating log settings: %w", err)
 	}
-	levels := []logging.Level{logging.LevelDebug, logging.LevelInfo, logging.LevelWarn, logging.LevelError}
-	for _, level := range levels {
-		if settings.Level == level.String() {
-			return level, nil
-		}
-	}
-	panic("log level not recognized: " + settings.Level) // should be validated earlier
+	return log.ParseLevel(settings.Level)
 }

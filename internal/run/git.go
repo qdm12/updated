@@ -6,13 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/git"
 )
 
 func setupGit(ctx context.Context, settings settings.Settings,
-	logger logging.Logger,
+	logger Logger,
 ) (gitUploader, error) {
 	gitSettings := settings.Git
 
@@ -61,7 +60,7 @@ func readSSHKeyPassphrase(passphraseFile string) (passphrase string, err error) 
 
 type gitUploader struct {
 	client *git.Client
-	logger logging.Logger
+	logger Logger
 }
 
 func (g *gitUploader) UploadAllChanges(ctx context.Context, message string) error {

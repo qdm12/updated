@@ -2,7 +2,6 @@ package ips
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 )
 
@@ -60,6 +59,6 @@ func (b *Builder) BuildIPsFromHostnames(hostnames []string) (ips []string) {
 		ips = append(ips, newIPs...)
 	}
 
-	b.logger.Info(fmt.Sprintf("found %d IP addresses from %d hostnames", len(ips), len(hostnames)))
+	b.logger.Infof("found %d IP addresses from %d hostnames", len(ips), len(hostnames))
 	return ips
 }

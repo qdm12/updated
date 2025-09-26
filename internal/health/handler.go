@@ -3,18 +3,16 @@ package health
 import (
 	"net/http"
 	"sync"
-
-	"github.com/qdm12/golibs/logging"
 )
 
-func newHandler(logger logging.Logger) *handler {
+func newHandler(logger Logger) *handler {
 	return &handler{
 		logger: logger,
 	}
 }
 
 type handler struct {
-	logger      logging.Logger
+	logger      Logger
 	healthErr   error
 	healthErrMu sync.RWMutex
 }

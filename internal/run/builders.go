@@ -40,7 +40,7 @@ func (r *Runner) buildBlockLists(ctx context.Context, buildHostnames,
 	for _, warning := range warnings {
 		r.logger.Warn(warning)
 	}
-	r.logger.Info(fmt.Sprintf("Trimmed down %d IP address lines", removedCount))
+	r.logger.Infof("Trimmed down %d IP address lines", removedCount)
 
 	ipsFilepath := filepath.Join(r.settings.OutputDir, ipsFilename)
 	err = writeLines(ipsFilepath, IPs)

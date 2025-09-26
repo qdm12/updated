@@ -12,7 +12,6 @@ import (
 
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
-	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
 	"github.com/qdm12/updated/pkg/hostnames"
@@ -22,7 +21,7 @@ import (
 // Runner runs the main update loop.
 type Runner struct {
 	settings         settings.Settings
-	logger           logging.Logger
+	logger           Logger
 	shoutrrrSender   *router.ServiceRouter
 	shoutrrrParams   *types.Params
 	ipsBuilder       *ips.Builder
@@ -31,9 +30,19 @@ type Runner struct {
 	setHealthErr     func(err error)
 }
 
+// Logger represents a minimal logger interface.
+type Logger interface {
+	Debug(s string)
+	Debugf(format string, args ...any)
+	Info(s string)
+	Infof(format string, args ...any)
+	Warn(s string)
+	Error(s string)
+}
+
 // New creates a new Runner.
 func New(settings settings.Settings, client *http.Client,
-	logger logging.Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
+	logger Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
 	setHealthErr func(err error),
 ) *Runner {
 	return &Runner{
@@ -94,8 +103,8 @@ func (r *Runner) singleRun(ctx context.Context) (err error) {
 	tStart := time.Now()
 	defer func() {
 		executionTime := time.Since(tStart)
-		r.logger.Info(fmt.Sprintf("overall execution took %s", executionTime))
-		r.logger.Info(fmt.Sprintf("sleeping for %s", r.settings.Period-executionTime))
+		r.logger.Infof("overall execution took %s", executionTime)
+		r.logger.Infof("sleeping for %s", r.settings.Period-executionTime)
 	}()
 	gitUploader, err := setupGit(ctx, r.settings, r.logger)
 	if err != nil {

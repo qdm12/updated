@@ -9,6 +9,7 @@ require (
 	github.com/qdm12/golibs v0.0.0-20210915134941-19815c6f95fe
 	github.com/qdm12/gosettings v0.4.4
 	github.com/qdm12/gotree v0.3.0
+	github.com/qdm12/log v0.1.0
 	github.com/stretchr/testify v1.11.1
 	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/crypto v0.42.0
