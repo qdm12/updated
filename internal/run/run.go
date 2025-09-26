@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/updated/internal/settings"
 	"github.com/qdm12/updated/pkg/dnscrypto"
-	"github.com/qdm12/updated/pkg/git"
 	"github.com/qdm12/updated/pkg/hostnames"
 	"github.com/qdm12/updated/pkg/ips"
 )
@@ -44,7 +43,7 @@ func New(settings settings.Settings, client *http.Client,
 		shoutrrrParams:   shoutrrrParams,
 		ipsBuilder:       ips.New(client, logger),
 		hostnamesBuilder: hostnames.New(client, logger),
-		dnscrypto:        dnscrypto.New(client, settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
+		dnscrypto:        dnscrypto.New(client, *settings.HexSums.NamedRootMD5, settings.HexSums.RootAnchorsSHA256),
 		setHealthErr:     setHealthErr,
 	}
 }
@@ -98,24 +97,11 @@ func (r *Runner) singleRun(ctx context.Context) (err error) {
 		r.logger.Info(fmt.Sprintf("overall execution took %s", executionTime))
 		r.logger.Info(fmt.Sprintf("sleeping for %s", r.settings.Period-executionTime))
 	}()
-	var gitClient *git.Client
-	gitSettings := r.settings.Git
-	if gitSettings != nil {
-		// Setup Git repository
-		gitClient, err = git.New(
-			gitSettings.SSHKnownHosts,
-			gitSettings.SSHKey,
-			gitSettings.SSHKeyPassphrase,
-			gitSettings.GitURL,
-			r.settings.OutputDir)
-		if err != nil {
-			return err
-		}
-		err = gitClient.Pull(ctx)
-		if err != nil {
-			return err
-		}
+	gitUploader, err := setupGit(ctx, r.settings, r.logger)
+	if err != nil {
+		return fmt.Errorf("setting up Git: %w", err)
 	}
+
 	chError := make(chan error)
 	go func() {
 		chError <- r.buildNamedRoot(ctx)
@@ -143,13 +129,10 @@ func (r *Runner) singleRun(ctx context.Context) (err error) {
 	if errorMessages != nil {
 		return fmt.Errorf("%w: %s", errEncountered, strings.Join(errorMessages, "; "))
 	}
-	if gitClient != nil {
-		message := "Update of " + time.Now().Format("2006-01-02")
-		err = gitClient.UploadAllChanges(ctx, message)
-		if err != nil {
-			return err
-		}
-		r.logger.Info("Committed to Git: " + message)
+	message := "Update of " + time.Now().Format("2006-01-02")
+	err = gitUploader.UploadAllChanges(ctx, message)
+	if err != nil {
+		return fmt.Errorf("uploading changes: %w", err)
 	}
 	return nil
 }

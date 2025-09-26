@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -15,12 +13,11 @@ import (
 
 	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/golibs/logging"
-	libparams "github.com/qdm12/golibs/params"
+	"github.com/qdm12/gosettings/reader"
+	"github.com/qdm12/gosettings/reader/sources/env"
 	"github.com/qdm12/updated/internal/health"
-	"github.com/qdm12/updated/internal/params"
 	"github.com/qdm12/updated/internal/run"
 	"github.com/qdm12/updated/internal/settings"
 )
@@ -32,10 +29,13 @@ func main() {
 	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 	args := os.Args
 	logger := logging.New(logging.Settings{})
+	reader := reader.New(reader.Settings{
+		Sources: []reader.Source{env.New(env.Settings{})},
+	})
 
 	errorCh := make(chan error)
 	go func() {
-		errorCh <- _main(ctx, args, logger)
+		errorCh <- _main(ctx, args, logger, reader)
 	}()
 
 	// Wait for OS signal or run error
@@ -77,7 +77,10 @@ func main() {
 	}
 }
 
-func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err error) {
+//nolint:funlen
+func _main(ctx context.Context, args []string, logger logging.ParentLogger,
+	reader *reader.Reader,
+) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -86,14 +89,6 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err
 		return client.Query(ctx)
 	}
 
-	envParams := libparams.New()
-	level, err := envParams.LogLevel("LOG_LEVEL", libparams.Default("info"))
-	if err != nil {
-		return fmt.Errorf("getting log level: %w", err)
-	}
-
-	logger.PatchLevel(level)
-
 	fmt.Print(`
 #####################################
 ############## Updated ##############
@@ -101,24 +96,31 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err
 ##### github.com/qdm12/updated ######
 #####################################
 `)
-	HTTPTimeout, err := envParams.Duration("HTTP_TIMEOUT", libparams.Default("10s"))
+
+	logLevel, err := getLogLevel(reader)
 	if err != nil {
-		return fmt.Errorf("getting HTTP timeout: %w", err)
+		return fmt.Errorf("getting log level: %w", err)
 	}
-	client := &http.Client{
-		Timeout: HTTPTimeout,
+	logger.PatchLevel(logLevel)
+
+	var allSettings settings.Settings
+	err = allSettings.Read(reader)
+	if err != nil {
+		return fmt.Errorf("reading settings: %w", err)
 	}
-	shoutrrrSender, shoutrrrParams, err := setupShoutrrr(envParams, logger)
+	allSettings.SetDefaults()
+	err = allSettings.Validate()
+	if err != nil {
+		return fmt.Errorf("validating settings: %w", err)
+	}
+	logger.Info(allSettings.String())
+
+	shoutrrrSender, err := shoutrrr.CreateSender(allSettings.Shoutrrr.ServiceURLs...)
 	if err != nil {
 		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
-
-	getter := params.NewGetter(envParams)
-	allSettings, err := settings.Get(getter)
-	if err != nil {
-		return fmt.Errorf("getting settings: %w", err)
-	}
-	logger.Info(allSettings.String())
+	shoutrrrParams := &types.Params{}
+	shoutrrrParams.SetTitle("Updated")
 
 	wg := &sync.WaitGroup{}
 
@@ -130,6 +132,9 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
+	client := &http.Client{
+		Timeout: allSettings.HTTPTimeout,
+	}
 	runner := run.New(allSettings, client, logger, shoutrrrSender, shoutrrrParams, healthServer.SetHealthErr)
 	// TODO context and in its own goroutine
 	logger.Info("Program started")
@@ -145,26 +150,19 @@ func _main(ctx context.Context, args []string, logger logging.ParentLogger) (err
 	return nil
 }
 
-func setupShoutrrr(envParams libparams.Interface, logger logging.Logger) (
-	sender *router.ServiceRouter, params *types.Params, err error,
-) {
-	shoutrrrURLs, err := envParams.Get("SHOUTRRR_SERVICES", libparams.CaseSensitiveValue())
+func getLogLevel(reader *reader.Reader) (logging.Level, error) {
+	var settings settings.Log
+	settings.Read(reader)
+	settings.SetDefaults()
+	err := settings.Validate()
 	if err != nil {
-		return nil, nil, err
+		return 0, fmt.Errorf("validating log settings: %w", err)
 	}
-	var rawURLs []string
-	if shoutrrrURLs != "" {
-		rawURLs = strings.Split(shoutrrrURLs, ",")
-		logger.Info("Using " + strconv.Itoa(len(rawURLs)) + "Shoutrrr service URLs")
+	levels := []logging.Level{logging.LevelDebug, logging.LevelInfo, logging.LevelWarn, logging.LevelError}
+	for _, level := range levels {
+		if settings.Level == level.String() {
+			return level, nil
+		}
 	}
-
-	sender, err = shoutrrr.CreateSender(rawURLs...)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	params = &types.Params{}
-	params.SetTitle("Updated")
-
-	return sender, params, nil
+	panic("log level not recognized: " + settings.Level) // should be validated earlier
 }

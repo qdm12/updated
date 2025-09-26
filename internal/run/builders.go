@@ -26,7 +26,7 @@ func (r *Runner) buildBlockLists(ctx context.Context, buildHostnames,
 	}
 
 	IPs := []string{}
-	if r.settings.ResolveHostnames {
+	if *r.settings.ResolveHostnames {
 		IPs = append(IPs, r.ipsBuilder.BuildIPsFromHostnames(hostnames)...)
 	}
 	if buildIps != nil {

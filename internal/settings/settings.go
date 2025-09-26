@@ -2,133 +2,147 @@
 package settings
 
 import (
+	"errors"
 	"fmt"
-	"strings"
+	"path/filepath"
+	"regexp"
 	"time"
+
+	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
+	"github.com/qdm12/gotree"
+	"github.com/qdm12/updated/pkg/dnscrypto"
 )
 
 // Settings holds the application settings.
 type Settings struct {
 	OutputDir        string
 	Period           time.Duration
-	ResolveHostnames bool
+	ResolveHostnames *bool
+	HTTPTimeout      time.Duration
 	HexSums          struct {
-		NamedRootMD5      string
+		NamedRootMD5      *string
 		RootAnchorsSHA256 string
 	}
-	Git *Git
+	Git      Git
+	Log      Log
+	Shoutrrr Shoutrrr
 }
 
-// Git holds the Git related settings.
-type Git struct {
-	GitURL           string
-	SSHKnownHosts    string
-	SSHKey           string
-	SSHKeyPassphrase string
+func (s *Settings) Read(r *reader.Reader) (err error) {
+	s.OutputDir = r.String("OUTPUT_DIR")
+
+	s.Period, err = r.Duration("PERIOD")
+	if err != nil {
+		return err
+	}
+
+	s.ResolveHostnames, err = r.BoolPtr("RESOLVE_HOSTNAMES")
+	if err != nil {
+		return err
+	}
+
+	s.HTTPTimeout, err = r.Duration("HTTP_TIMEOUT")
+	if err != nil {
+		return err
+	}
+
+	s.HexSums.NamedRootMD5 = r.Get("NAMED_ROOT_MD5")
+	s.HexSums.RootAnchorsSHA256 = r.String("ROOT_ANCHORS_SHA256")
+
+	err = s.Git.read(r)
+	if err != nil {
+		return fmt.Errorf("reading git settings: %w", err)
+	}
+
+	s.Log.Read(r)
+	s.Shoutrrr.read(r)
+
+	return nil
 }
 
-// Getter defines an interface to get settings.
-type Getter interface {
-	// General getters
-	GetOutputDir() (path string, err error)
-	GetPeriod() (period time.Duration, err error)
+var (
+	regex32BytesHex = regexp.MustCompile(`^[a-fA-F0-9]{32}$`)
+	regex64BytesHex = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
 
-	// Git
-	GetGit() (doGit bool, err error)
-	GetSSHKnownHostsFilepath() (filePath string, err error)
-	GetSSHKeyFilepath() (filePath string, err error)
-	GetSSHKeyPassphrase() (passphrase string, err error)
-	GetGitURL() (URL string, err error)
+	ErrPeriodTooSmall            = errors.New("period is too small")
+	ErrNamedRootMD5NotValid      = errors.New("named root MD5 checksum is not valid")
+	ErrRootAnchorsSHA256NotValid = errors.New("root anchors SHA256 checksum is not valid")
+)
 
-	// Crypto
-	GetNamedRootMD5() (namedRootMD5 string, err error)
-	GetRootAnchorsSHA256() (rootAnchorsSHA256 string, err error)
-
-	// IPs blocking
-	GetResolveHostnames() (resolveHostnames bool, err error)
+// SetDefaults sets the default values for the settings.
+func (s *Settings) SetDefaults() {
+	s.OutputDir = gosettings.DefaultComparable(s.OutputDir, "./files")
+	const defaultPeriod = 600 * time.Minute
+	s.Period = gosettings.DefaultComparable(s.Period, defaultPeriod)
+	s.ResolveHostnames = gosettings.DefaultPointer(s.ResolveHostnames, false)
+	const defaultHTTPTimeout = 10 * time.Second
+	s.HTTPTimeout = gosettings.DefaultComparable(s.HTTPTimeout, defaultHTTPTimeout)
+	s.HexSums.NamedRootMD5 = gosettings.DefaultPointer(s.HexSums.NamedRootMD5, "")
+	s.HexSums.RootAnchorsSHA256 = gosettings.DefaultComparable(s.HexSums.RootAnchorsSHA256, dnscrypto.RootAnchorsSHA256Sum)
+	s.Git.setDefaults()
+	s.Log.SetDefaults()
+	s.Shoutrrr.setDefaults()
 }
 
-// Get retrieves the settings using the provided [Getter].
-func Get(getter Getter) (s Settings, err error) {
-	s.OutputDir, err = getter.GetOutputDir()
+// Validate validates the settings and returns an error if something is wrong.
+func (s Settings) Validate() (err error) {
+	_, err = filepath.Abs(s.OutputDir)
 	if err != nil {
-		return s, err
-	}
-	s.HexSums.NamedRootMD5, err = getter.GetNamedRootMD5()
-	if err != nil {
-		return s, err
-	}
-	s.HexSums.RootAnchorsSHA256, err = getter.GetRootAnchorsSHA256()
-	if err != nil {
-		return s, err
-	}
-	s.Period, err = getter.GetPeriod()
-	if err != nil {
-		return s, err
-	}
-	s.ResolveHostnames, err = getter.GetResolveHostnames()
-	if err != nil {
-		return s, err
-	}
-	git, err := getter.GetGit()
-	if err != nil {
-		return s, err
-	} else if git {
-		s.Git = new(Git)
-		*s.Git, err = readGit(getter)
-		if err != nil {
-			return s, fmt.Errorf("reading git settings: %w", err)
-		}
+		return fmt.Errorf("output directory: %w", err)
 	}
 
-	return s, nil
+	const minPeriod = 5 * time.Minute
+	switch {
+	case s.Period < minPeriod:
+		return fmt.Errorf("%w: %s < %s", ErrPeriodTooSmall, s.Period, minPeriod)
+	case *s.HexSums.NamedRootMD5 != "" &&
+		!regex64BytesHex.MatchString(*s.HexSums.NamedRootMD5):
+		return fmt.Errorf("%w: %q does not match regex %q",
+			ErrNamedRootMD5NotValid, *s.HexSums.NamedRootMD5, regex32BytesHex)
+	case !regex64BytesHex.MatchString(s.HexSums.RootAnchorsSHA256):
+		return fmt.Errorf("%w: %q does not match regex %q",
+			ErrRootAnchorsSHA256NotValid, s.HexSums.RootAnchorsSHA256, regex64BytesHex)
+	}
+
+	const minHTTPTimeout = time.Second
+	if s.HTTPTimeout < minHTTPTimeout {
+		return fmt.Errorf("HTTP timeout %s cannot be smaller than %s",
+			s.HTTPTimeout, minHTTPTimeout)
+	}
+
+	err = s.Git.validate()
+	if err != nil {
+		return fmt.Errorf("validating git settings: %w", err)
+	}
+
+	err = s.Log.Validate()
+	if err != nil {
+		return fmt.Errorf("validating log settings: %w", err)
+	}
+
+	err = s.Shoutrrr.validate()
+	if err != nil {
+		return fmt.Errorf("validating shoutrrr settings: %w", err)
+	}
+
+	return nil
 }
 
-func readGit(getter Getter) (g Git, err error) {
-	g.GitURL, err = getter.GetGitURL()
-	if err != nil {
-		return g, fmt.Errorf("getting Git URL: %w", err)
-	}
-	g.SSHKnownHosts, err = getter.GetSSHKnownHostsFilepath()
-	if err != nil {
-		return g, fmt.Errorf("getting SSH known hosts filepath: %w", err)
-	}
-	g.SSHKey, err = getter.GetSSHKeyFilepath()
-	if err != nil {
-		return g, fmt.Errorf("getting SSH key filepath: %w", err)
-	}
-	g.SSHKeyPassphrase, err = getter.GetSSHKeyPassphrase()
-	if err != nil {
-		return g, fmt.Errorf("getting SSH key passphrase: %w", err)
-	}
-	return g, nil
+func (s Settings) String() string {
+	return s.toLinesNode().String()
 }
 
-func (s *Settings) String() (result string) {
-	resolveHostnamesStr := "no"
-	if s.ResolveHostnames {
-		resolveHostnamesStr = "yes"
-	}
-	lines := []string{
-		"output directory: " + s.OutputDir,
-		"period: " + s.Period.String(),
-		"resolve hostnames: " + resolveHostnamesStr,
-		"named root MD5 sum: " + s.HexSums.NamedRootMD5,
-		"root anchors SHA256 sum: " + s.HexSums.RootAnchorsSHA256,
-	}
-	if s.Git == nil {
-		lines = append(lines, "Git: disabled")
-	} else {
-		passhpraseSet := "no"
-		if len(s.Git.SSHKeyPassphrase) > 0 {
-			passhpraseSet = "yes"
-		}
-		lines = append(lines, []string{
-			"Git URL: " + s.Git.GitURL,
-			"SSH known hosts file: " + s.Git.SSHKnownHosts,
-			"SSH key file: " + s.Git.SSHKey,
-			"SSH key passphrase set: " + passhpraseSet,
-		}...)
-	}
-	return "Settings:\n|--" + strings.Join(lines, "\n|--") + "\n"
+func (s Settings) toLinesNode() (node *gotree.Node) {
+	node = gotree.New("Settings summary:")
+	node.Appendf("output directory: %s", s.OutputDir)
+	node.Appendf("period: %s", s.Period)
+	node.Appendf("resolve hostnames: %s", gosettings.BoolToYesNo(s.ResolveHostnames))
+	node.Appendf("HTTP timeout: %s", s.HTTPTimeout)
+	node.Appendf("named root MD5 sum: %s", *s.HexSums.NamedRootMD5)
+	node.Appendf("root anchors SHA256 sum: %s", s.HexSums.RootAnchorsSHA256)
+	node.AppendNode(s.Git.toLinesNode())
+	node.AppendNode(s.Log.toLinesNode())
+	node.AppendNode(s.Shoutrrr.toLinesNode())
+	return node
 }
