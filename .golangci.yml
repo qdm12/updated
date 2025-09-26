@@ -25,6 +25,9 @@ linters:
           - revive
         path: "^cmd\\/.+$"
         text: "package-comments: should have a package comment"
+      - linters:
+          - err113
+        text: "do not define dynamic errors, use wrapped static errors instead"
 
   enable:
     - asasalint
