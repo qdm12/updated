@@ -3,15 +3,12 @@ package hostnames
 
 import (
 	"net/http"
-
-	"github.com/qdm12/golibs/verification"
 )
 
 // Builder builds hostnames lists.
 type Builder struct {
-	client   *http.Client
-	logger   Logger
-	verifier verification.Verifier
+	client *http.Client
+	logger Logger
 }
 
 // Logger represents a minimal logger interface.
@@ -25,8 +22,7 @@ type Logger interface {
 // New returns a new builder of hostnames lists.
 func New(client *http.Client, logger Logger) *Builder {
 	return &Builder{
-		client:   client,
-		logger:   logger,
-		verifier: verification.NewVerifier(),
+		client: client,
+		logger: logger,
 	}
 }

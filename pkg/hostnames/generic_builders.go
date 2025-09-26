@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 )
+
+var regexHostname = regexp.MustCompile(`([a-zA-Z0-9]|[a-zA-Z0-9_][a-zA-Z0-9\-_]{0,61}[a-zA-Z0-9_])(\.([a-zA-Z0-9]|[a-zA-Z0-9_][a-zA-Z0-9\-_]{0,61}[a-zA-Z0-9]))*`) //nolint:lll
 
 func (b *Builder) buildForSources(ctx context.Context, title string,
 	sources []sourceType,
@@ -33,7 +36,7 @@ func (b *Builder) buildForSources(ctx context.Context, title string,
 
 	var sortedHostnames sort.StringSlice
 	for hostname := range uniqueHostnames {
-		if !b.verifier.MatchHostname(hostname) {
+		if !regexHostname.MatchString(hostname) {
 			continue
 		}
 		sortedHostnames = append(sortedHostnames, hostname)

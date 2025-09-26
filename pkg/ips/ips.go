@@ -4,15 +4,12 @@ package ips
 import (
 	"net"
 	"net/http"
-
-	"github.com/qdm12/golibs/verification"
 )
 
 // Builder builds IP lists.
 type Builder struct {
 	client   *http.Client
 	logger   Logger
-	verifier verification.Verifier
 	lookupIP func(host string) ([]net.IP, error)
 }
 
@@ -29,7 +26,6 @@ func New(client *http.Client, logger Logger) *Builder {
 	return &Builder{
 		client:   client,
 		logger:   logger,
-		verifier: verification.NewVerifier(),
 		lookupIP: net.LookupIP,
 	}
 }

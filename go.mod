@@ -6,7 +6,6 @@ require (
 	github.com/breml/rootcerts v0.3.1
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/go-git/go-git/v6 v6.0.0-20250923192830-1ad5b9c7da82
-	github.com/qdm12/golibs v0.0.0-20210915134941-19815c6f95fe
 	github.com/qdm12/gosettings v0.4.4
 	github.com/qdm12/gotree v0.3.0
 	github.com/qdm12/log v0.1.0
