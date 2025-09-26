@@ -16,6 +16,7 @@ import (
 	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/reader/sources/env"
+	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
 	"github.com/qdm12/updated/internal/health"
 	"github.com/qdm12/updated/internal/run"
@@ -89,13 +90,14 @@ func _main(ctx context.Context, args []string, logger log.LoggerInterface,
 		return client.Query(ctx)
 	}
 
-	fmt.Print(`
-#####################################
-############## Updated ##############
-########## by Quentin McGaw #########
-##### github.com/qdm12/updated ######
-#####################################
-`)
+	splashSettings := gosplash.MakeLines(gosplash.Settings{
+		User:       "qdm12",
+		Repository: "updated",
+		Emails:     []string{"quentin.mcgaw@gmail.com"},
+	})
+	for _, line := range splashSettings {
+		fmt.Println(line)
+	}
 
 	logLevel, err := getLogLevel(reader)
 	if err != nil {
