@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -14,6 +12,8 @@ import (
 	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/types"
+	"github.com/qdm12/goservices"
+	"github.com/qdm12/goservices/hooks"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/reader/sources/env"
 	"github.com/qdm12/gosplash"
@@ -78,7 +78,7 @@ func main() {
 	}
 }
 
-//nolint:funlen
+//nolint:funlen,cyclop
 func _main(ctx context.Context, args []string, logger log.LoggerInterface,
 	reader *reader.Reader,
 ) (err error) {
@@ -124,32 +124,41 @@ func _main(ctx context.Context, args []string, logger log.LoggerInterface,
 	shoutrrrParams := &types.Params{}
 	shoutrrrParams.SetTitle("Updated")
 
-	wg := &sync.WaitGroup{}
-
 	const healthServerAddr = "127.0.0.1:9999"
-	healthServer := health.NewServer(
+	healthServer, setHealthErr, err := health.NewServer(
 		healthServerAddr,
 		logger.New(log.SetComponent("healthcheck server")),
 	)
-	wg.Add(1)
-	go healthServer.Run(ctx, wg)
+	if err != nil {
+		return fmt.Errorf("creating health server: %w", err)
+	}
 
-	client := &http.Client{
-		Timeout: allSettings.HTTPTimeout,
+	runner := run.New(allSettings, logger, shoutrrrSender, shoutrrrParams, setHealthErr)
+
+	sequence, err := goservices.NewSequence(goservices.SequenceSettings{
+		ServicesStart: []goservices.Service{healthServer, runner},
+		ServicesStop:  []goservices.Service{runner, healthServer},
+		Hooks:         hooks.NewWithLog(logger),
+	})
+	if err != nil {
+		return fmt.Errorf("creating sequence of services: %w", err)
 	}
-	runner := run.New(allSettings, client, logger, shoutrrrSender, shoutrrrParams, healthServer.SetHealthErr)
-	// TODO context and in its own goroutine
-	logger.Info("Program started")
-	errs := shoutrrrSender.Send("Program started", shoutrrrParams)
-	for _, err := range errs {
+
+	runError, err := sequence.Start(ctx)
+	if err != nil {
+		return fmt.Errorf("starting services: %w", err)
+	}
+
+	select {
+	case <-ctx.Done():
+		err = sequence.Stop()
 		if err != nil {
-			logger.Error(err.Error())
+			return fmt.Errorf("stopping services: %w", err)
 		}
+		return nil
+	case err = <-runError:
+		return err
 	}
-	wg.Add(1)
-	runner.Run(ctx, wg, allSettings.Period) // this can only exit when context is canceled.
-	wg.Wait()
-	return nil
 }
 
 func getLogLevel(reader *reader.Reader) (log.Level, error) {

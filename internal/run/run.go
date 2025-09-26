@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/containrrr/shoutrrr/pkg/router"
@@ -28,6 +27,10 @@ type Runner struct {
 	hostnamesBuilder *hostnames.Builder
 	dnscrypto        *dnscrypto.DNSCrypto
 	setHealthErr     func(err error)
+
+	// State
+	cancel context.CancelFunc
+	done   <-chan struct{}
 }
 
 // Logger represents a minimal logger interface.
@@ -40,11 +43,14 @@ type Logger interface {
 	Error(s string)
 }
 
-// New creates a new Runner.
-func New(settings settings.Settings, client *http.Client,
-	logger Logger, shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
+// New creates a new [Runner] implementing the goservices.Service interface.
+func New(settings settings.Settings, logger Logger,
+	shoutrrrSender *router.ServiceRouter, shoutrrrParams *types.Params,
 	setHealthErr func(err error),
 ) *Runner {
+	client := &http.Client{
+		Timeout: settings.HTTPTimeout,
+	}
 	return &Runner{
 		settings:         settings,
 		logger:           logger,
@@ -57,44 +63,52 @@ func New(settings settings.Settings, client *http.Client,
 	}
 }
 
-// Run starts the main loop that runs every period duration until the context is done.
-func (r *Runner) Run(ctx context.Context, wg *sync.WaitGroup, period time.Duration) {
-	defer wg.Done()
-	ticker := time.NewTicker(period)
-	defer ticker.Stop()
-	err := r.singleRun(ctx)
-	if err != nil {
-		r.setHealthErr(err)
-		r.logger.Error(err.Error())
-		errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
-		for _, err := range errs {
-			if err != nil {
-				r.logger.Error(err.Error())
-			}
-		}
-	} else {
-		r.setHealthErr(nil)
-	}
-	for {
-		select {
-		case <-ctx.Done():
+func (r *Runner) String() string {
+	return "update runner"
+}
+
+// Start starts the runner.
+func (r *Runner) Start(_ context.Context) (runErr <-chan error, err error) {
+	done := make(chan struct{})
+	r.done = done
+	ctx, cancel := context.WithCancel(context.Background())
+	r.cancel = cancel
+	ready := make(chan struct{})
+	go func() {
+		defer close(done)
+		ticker := time.NewTicker(r.settings.Period)
+		defer ticker.Stop()
+		close(ready)
+		err = r.singleRun(ctx)
+		if ctx.Err() != nil {
 			return
-		case <-ticker.C:
-			err := r.singleRun(ctx)
-			if err != nil {
-				r.setHealthErr(err)
-				r.logger.Error(err.Error())
-				errs := r.shoutrrrSender.Send(err.Error(), r.shoutrrrParams)
-				for _, err := range errs {
-					if err != nil {
-						r.logger.Error(err.Error())
-					}
+		}
+		r.handleRunError(err)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err = r.singleRun(ctx)
+				if ctx.Err() != nil {
+					return
 				}
-			} else {
-				r.setHealthErr(nil)
+				r.handleRunError(err)
 			}
 		}
-	}
+	}()
+	<-ready
+
+	r.shoutrrrSend(r.String() + " started")
+
+	return nil, nil //nolint:nilnil
+}
+
+// Stop stops the runner.
+func (r *Runner) Stop() error {
+	r.cancel()
+	<-r.done
+	return nil
 }
 
 var errEncountered = errors.New("at least one error encountered")
@@ -144,4 +158,23 @@ func (r *Runner) singleRun(ctx context.Context) (err error) {
 		return fmt.Errorf("uploading changes: %w", err)
 	}
 	return nil
+}
+
+func (r *Runner) handleRunError(err error) {
+	if err == nil {
+		r.setHealthErr(nil)
+		return
+	}
+	r.setHealthErr(err)
+	r.logger.Error(err.Error())
+	r.shoutrrrSend(err.Error())
+}
+
+func (r *Runner) shoutrrrSend(message string) {
+	errs := r.shoutrrrSender.Send(message, r.shoutrrrParams)
+	for _, err := range errs {
+		if err != nil {
+			r.logger.Warn(err.Error())
+		}
+	}
 }
