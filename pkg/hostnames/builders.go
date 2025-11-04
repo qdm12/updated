@@ -53,17 +53,6 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 func (b *Builder) BuildAds(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
-			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt",
-			checkLine: func(line string) bool {
-				return !strings.HasSuffix(line, "/::")
-			},
-			postClean: func(line string) string {
-				line = strings.TrimPrefix(line, "address=/")
-				line = strings.TrimSuffix(line, "/0.0.0.0")
-				return strings.TrimSuffix(line, ".")
-			},
-		},
-		{
 			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/hostnames.txt",
 			checkLine: func(line string) bool {
 				return !strings.HasPrefix(line, ":: ")
