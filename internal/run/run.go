@@ -125,31 +125,29 @@ func (r *Runner) singleRun(ctx context.Context) (err error) {
 		return fmt.Errorf("setting up Git: %w", err)
 	}
 
+	builders := [...]func(context.Context) error{
+		r.buildNamedRoot,
+		r.buildRootAnchorsAndKeys,
+		r.buildMalicious,
+		r.buildAds,
+	}
+
 	chError := make(chan error)
-	go func() {
-		chError <- r.buildNamedRoot(ctx)
-	}()
-	go func() {
-		chError <- r.buildRootAnchorsAndKeys(ctx)
-	}()
-	go func() {
-		chError <- r.buildMalicious(ctx)
-	}()
-	go func() {
-		chError <- r.buildAds(ctx)
-	}()
-	go func() {
-		chError <- r.buildSurveillance(ctx)
-	}()
-	var errorMessages []string
-	for range 5 {
+	for _, builder := range builders {
+		go func(buildFunc func(context.Context) error) {
+			chError <- buildFunc(ctx)
+		}(builder)
+	}
+
+	errorMessages := make([]string, 0, len(builders))
+	for range builders {
 		err := <-chError
 		if err != nil {
 			errorMessages = append(errorMessages, err.Error())
 		}
 	}
 	close(chError)
-	if errorMessages != nil {
+	if len(errorMessages) > 0 {
 		return fmt.Errorf("%w: %s", errEncountered, strings.Join(errorMessages, "; "))
 	}
 	message := "Update of " + time.Now().Format("2006-01-02")

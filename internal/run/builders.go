@@ -89,12 +89,3 @@ func (r *Runner) buildAds(ctx context.Context) error {
 		constants.AdsIPsFilename,
 	)
 }
-
-func (r *Runner) buildSurveillance(ctx context.Context) error {
-	return r.buildBlockLists(ctx,
-		r.hostnamesBuilder.BuildSurveillance,
-		nil,
-		constants.SurveillanceHostnamesFilename,
-		constants.SurveillanceIPsFilename,
-	)
-}

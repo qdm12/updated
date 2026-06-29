@@ -11,13 +11,12 @@
 ## Features
 
 - Periodically builds
-    - A list of unique malicious hostnames
-    - A list of unique malicious IP addresses
-    - A list of unique ads hostnames
-    - A list of unique surveillance hostnames
-    - InterNIC's named roots for DNS resolvers
-    - Root anchors XML for DNS resolvers
-    - Root keys to be used by Unbound
+  - A list of unique malicious hostnames
+  - A list of unique malicious IP addresses
+  - A list of unique ads hostnames
+  - InterNIC's named roots for DNS resolvers
+  - Root anchors XML for DNS resolvers
+  - Root keys to be used by Unbound
 - Optionally upload the changes to a Git repository using an SSH key
 - Based on the Scratch image with a total uncompressed size of 15.4MB
 - Compatible with amd64 only although it is easily cross CPU compiled if needed

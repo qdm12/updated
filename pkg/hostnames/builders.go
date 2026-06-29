@@ -6,12 +6,6 @@ import (
 	"strings"
 )
 
-// BuildSurveillance builds a list of surveillance hostnames.
-func (b *Builder) BuildSurveillance(ctx context.Context) (hostnames []string, err error) {
-	sources := []sourceType{}
-	return b.buildForSources(ctx, "surveillance", sources)
-}
-
 // BuildMalicious builds a list of malicious hostnames from different sources.
 func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
