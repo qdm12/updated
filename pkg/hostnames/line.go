@@ -4,11 +4,11 @@ import (
 	"strings"
 )
 
-type cleanLineFunc func(line string) (cleaned string)
+type cleanLineFunc func(line string) (cleaned string, err error)
 
 type checkLineFunc func(line string) (ok bool)
 
-func preCleanLine(line string, customClean cleanLineFunc) (cleaned string) {
+func preCleanLine(line string, customClean cleanLineFunc) (cleaned string, err error) {
 	line = strings.ToLower(line)
 
 	// remove comment
@@ -24,10 +24,10 @@ func preCleanLine(line string, customClean cleanLineFunc) (cleaned string) {
 	line = strings.TrimSpace(line)
 
 	if customClean != nil {
-		line = customClean(line)
+		line, err = customClean(line)
 	}
 
-	return line
+	return line, err
 }
 
 func isLineValid(line string, customIsLineValid checkLineFunc) (valid bool) {
@@ -39,10 +39,10 @@ func isLineValid(line string, customIsLineValid checkLineFunc) (valid bool) {
 	return customIsLineValid(line)
 }
 
-func postCleanLine(line string, customClean cleanLineFunc) (cleaned string) {
+func postCleanLine(line string, customClean cleanLineFunc) (cleaned string, err error) {
 	line = strings.TrimSpace(line)
 	if customClean != nil {
-		line = customClean(line)
+		line, err = customClean(line)
 	}
-	return line
+	return line, err
 }

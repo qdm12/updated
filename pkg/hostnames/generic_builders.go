@@ -83,9 +83,15 @@ func (b *Builder) buildForSource(ctx context.Context, url string,
 	lines := strings.Split(string(content), "\n")
 	hostnames = make([]string, 0, len(lines))
 	for _, line := range lines {
-		line = preCleanLine(line, preClean)
+		line, err = preCleanLine(line, preClean)
+		if err != nil {
+			return nil, fmt.Errorf("pre-cleaning line: %w", err)
+		}
 		if isLineValid(line, checkLine) {
-			line = postCleanLine(line, postClean)
+			line, err = postCleanLine(line, postClean)
+			if err != nil {
+				return nil, fmt.Errorf("post-cleaning line: %w", err)
+			}
 			hostnames = append(hostnames, line)
 		}
 	}

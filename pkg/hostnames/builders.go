@@ -2,6 +2,7 @@ package hostnames
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -15,18 +16,8 @@ func (b *Builder) BuildSurveillance(ctx context.Context) (hostnames []string, er
 func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
 		{
-			url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-			preClean: func(line string) (cleaned string) {
-				line = strings.TrimPrefix(line, "0.0.0.0 ")
-				if line == "0.0.0.0" {
-					line = "" // discard
-				}
-				return line
-			},
-			checkLine: func(line string) (ok bool) {
-				return !hasAnyOfPrefixes(line, "127.0.0.1 ", "255.255.255.255",
-					"::1", "fe80::1", "ff00::0", "ff02::1", "ff02::2", "ff02:")
-			},
+			url:      "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/StevenBlack/hosts",
+			preClean: preCleanQuadZeroes,
 		},
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/abuse-nl.txt"},
@@ -36,6 +27,27 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 		{url: "https://blocklistproject.github.io/Lists/alt-version/ransomware-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/scam-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/redirect-nl.txt"},
+		{
+			url:      "https://raw.githubusercontent.com/mitchellkrogza/Badd-Boyz-Hosts/master/hosts",
+			preClean: preCleanQuadZeroes,
+		},
+		{
+			url:      "https://raw.githubusercontent.com/bigdargon/hostsVN/master/option/hosts-VN",
+			preClean: preCleanQuadZeroes,
+		},
+		{
+			url: "https://urlhaus.abuse.ch/downloads/hostfile/",
+			preClean: func(line string) (cleaned string, err error) {
+				if line == "" {
+					return "", nil
+				}
+				const expectedPrefix = "127.0.0.1	"
+				if !strings.HasPrefix(line, expectedPrefix) {
+					return "", fmt.Errorf("preClean: line prefix unexpected: %s", line)
+				}
+				return line[len(expectedPrefix):], nil
+			},
+		},
 	}
 	return b.buildForSources(ctx, "malicious", sources)
 }
@@ -46,15 +58,27 @@ func (b *Builder) BuildAds(ctx context.Context) (hostnames []string, err error) 
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/ads-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
+		{
+			url:      "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&mimetype=plaintext&useip=0.0.0.0",
+			preClean: preCleanQuadZeroes,
+		},
+		{
+			url:      "https://raw.githubusercontent.com/anudeepND/blacklist/refs/heads/master/adservers.txt",
+			preClean: preCleanQuadZeroes,
+		},
 	}
 	return b.buildForSources(ctx, "ads", sources)
 }
 
-func hasAnyOfPrefixes(s string, prefixes ...string) (has bool) {
-	for _, prefix := range prefixes {
-		if strings.HasPrefix(s, prefix) {
-			return true
-		}
+func preCleanQuadZeroes(line string) (cleaned string, err error) {
+	switch {
+	case line == "":
+		return "", nil
+	case strings.HasPrefix(line, "0.0.0.0 "): // common case
+		return line[8:], nil
+	case strings.HasPrefix(line, "127.0.0.1 "), strings.HasPrefix(line, "::1 "): // ignore localhost
+		return "", nil
+	default:
+		return "", fmt.Errorf("preCleanQuadZeroes: line prefix unexpected: %s", line)
 	}
-	return false
 }
