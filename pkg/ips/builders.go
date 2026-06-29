@@ -2,11 +2,8 @@ package ips
 
 import (
 	"context"
-	"regexp"
 	"strconv"
 )
-
-var regexIPv4 = regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`) //nolint:lll
 
 // BuildMalicious obtains lists of IP addresses from different web sources
 // and returns a list of CIDR IP ranges of malicious IP addresses.
@@ -20,13 +17,6 @@ func (b *Builder) BuildMalicious(ctx context.Context) (ips []string, err error) 
 		},
 		{
 			url: "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/2.txt",
-			preClean: func(line string) string {
-				found := regexIPv4.FindAllString(line, -1)
-				if len(found) == 0 {
-					return ""
-				}
-				return found[0]
-			},
 		},
 	}
 
