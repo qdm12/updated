@@ -10,14 +10,14 @@ type checkLineFunc func(line string) (ok bool)
 
 func preCleanLine(line string, preClean cleanLineFunc) string {
 	// remove comment
-	var lineWithoutComment string
+	lineWithoutCommentBuilder := strings.Builder{}
 	for _, r := range line {
 		if r == '#' {
 			break
 		}
-		lineWithoutComment += string(r)
+		lineWithoutCommentBuilder.WriteRune(r)
 	}
-	line = lineWithoutComment
+	line = lineWithoutCommentBuilder.String()
 
 	line = strings.TrimSpace(line)
 

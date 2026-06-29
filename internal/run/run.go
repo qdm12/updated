@@ -68,7 +68,7 @@ func (r *Runner) String() string {
 }
 
 // Start starts the runner.
-func (r *Runner) Start(_ context.Context) (runErr <-chan error, err error) {
+func (r *Runner) Start(_ context.Context) (runErr <-chan error, err error) { //nolint:contextcheck
 	done := make(chan struct{})
 	r.done = done
 	ctx, cancel := context.WithCancel(context.Background())

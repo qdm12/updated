@@ -20,8 +20,8 @@ func NewServer(address string, logger Logger) (
 	setErr = handler.setHealthErr
 	server, err = httpserver.New(httpserver.Settings{
 		Handler: newHandler(logger),
-		Name:    ptrTo("healthcheck"),
-		Address: ptrTo(address),
+		Name:    new("healthcheck"),
+		Address: new(address),
 		Logger:  logger,
 	})
 	if err != nil {
@@ -29,5 +29,3 @@ func NewServer(address string, logger Logger) (
 	}
 	return server, setErr, nil
 }
-
-func ptrTo[T any](v T) *T { return &v }

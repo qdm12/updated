@@ -87,10 +87,7 @@ func removeIPsInCIDRs(ips []string, ranger cidranger.Ranger) (cleanedIPs []strin
 }
 
 func sortStringSlice(slice []string) []string {
-	var sorted sort.StringSlice
-	for _, element := range slice {
-		sorted = append(sorted, element)
-	}
+	sorted := sort.StringSlice(slice)
 	sorted.Sort()
 	return sorted
 }

@@ -12,14 +12,14 @@ func preCleanLine(line string, customClean cleanLineFunc) (cleaned string, err e
 	line = strings.ToLower(line)
 
 	// remove comment
-	var lineWithoutComment string
+	lineWithoutCommentBuilder := strings.Builder{}
 	for _, r := range line {
 		if r == '#' {
 			break
 		}
-		lineWithoutComment += string(r)
+		lineWithoutCommentBuilder.WriteRune(r)
 	}
-	line = lineWithoutComment
+	line = lineWithoutCommentBuilder.String()
 
 	line = strings.TrimSpace(line)
 
