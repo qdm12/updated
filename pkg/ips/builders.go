@@ -2,6 +2,7 @@ package ips
 
 import (
 	"context"
+	"net/netip"
 	"strconv"
 )
 
@@ -12,7 +13,11 @@ func (b *Builder) BuildMalicious(ctx context.Context) (ips []string, err error) 
 		{
 			url: "https://iplists.firehol.org/files/firehol_level1.netset",
 			checkLine: func(line string) (ok bool) {
-				return line != "0.0.0.0/8"
+				prefix, err := netip.ParsePrefix(line)
+				if err != nil {
+					return false
+				}
+				return !prefix.Addr().IsPrivate() // ignore private prefixes
 			},
 		},
 		{
