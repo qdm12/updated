@@ -7,9 +7,7 @@ import (
 
 // BuildSurveillance builds a list of surveillance hostnames.
 func (b *Builder) BuildSurveillance(ctx context.Context) (hostnames []string, err error) {
-	sources := []sourceType{
-		{url: "https://raw.githubusercontent.com/dyne/domain-list/master/data/nsa"},
-	}
+	sources := []sourceType{}
 	return b.buildForSources(ctx, "surveillance", sources)
 }
 
@@ -30,17 +28,6 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 					"::1", "fe80::1", "ff00::0", "ff02::1", "ff02::2", "ff02:")
 			},
 		},
-		{
-			url: "https://raw.githubusercontent.com/k0nsl/unbound-blocklist/master/blocks.conf",
-			preClean: func(line string) string {
-				line = strings.TrimPrefix(line, "local-zone: \"")
-				line = strings.TrimSuffix(line, "\" redirect")
-				return line
-			},
-			checkLine: func(line string) bool {
-				return !strings.HasPrefix(line, "local-data: \"")
-			},
-		},
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/abuse-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/fraud-nl.txt"},
@@ -56,16 +43,6 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 // BuildAds builds a list of ad hostnames from different sources.
 func (b *Builder) BuildAds(ctx context.Context) (hostnames []string, err error) {
 	sources := []sourceType{
-		{
-			url: "https://raw.githubusercontent.com/notracking/hosts-blocklists/master/hostnames.txt",
-			checkLine: func(line string) bool {
-				return !strings.HasPrefix(line, ":: ")
-			},
-			postClean: func(line string) string {
-				line = strings.TrimPrefix(line, "0.0.0.0 ")
-				return strings.TrimSuffix(line, ".")
-			},
-		},
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/ads-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
