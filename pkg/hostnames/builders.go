@@ -48,7 +48,7 @@ func (b *Builder) BuildMalicious(ctx context.Context) (hostnames []string, err e
 		{url: "https://blocklistproject.github.io/Lists/alt-version/phishing-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/ransomware-nl.txt"},
 		{url: "https://blocklistproject.github.io/Lists/alt-version/scam-nl.txt"},
-		// {url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/redirect-nl.txt"},
 	}
 	return b.buildForSources(ctx, "malicious", sources)
 }
@@ -68,6 +68,7 @@ func (b *Builder) BuildAds(ctx context.Context) (hostnames []string, err error) 
 		},
 		// See https://github.com/blocklistproject/Lists
 		{url: "https://blocklistproject.github.io/Lists/alt-version/ads-nl.txt"},
+		{url: "https://blocklistproject.github.io/Lists/alt-version/tracking-nl.txt"},
 	}
 	return b.buildForSources(ctx, "ads", sources)
 }
